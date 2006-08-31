@@ -109,7 +109,7 @@ also let you access processor information, including processor family
    TotalPage                   - Allocated size of page (swap) file.
    AvailPage                   - Available page file memory.
    TotalVirtual                - Total physical + maximum page file.
-   AvailableVirtual            - Total amount of available memory.</PRE>
+   AvailVirtual                - Total amount of available memory.</PRE>
 <PRE>
 
    Values returned through the hash can also be specified by setting
@@ -226,7 +226,10 @@ ActiveState port of Perl 5.6. It has <STRONG>not</STRONG> been tested on Windows
  0.02 - Fixed CPU speed reporting for Win9x. Module now includes a DLL that
         performs the Win9x CPU speed determination.
  0.03 - Fixed warning &quot;use of uninitialized value&quot; when calling MemoryInfo
-        with no size argument.</PRE>
+        with no size argument.
+ 0.04 - Fixed &quot;GetValue&quot; error when calling ProcessorInfo as non-admin user
+        on Windows NT
+      - Fixed documentation bug: &quot;AvailableVirtual&quot; to &quot;AvailVirtual&quot;</PRE>
 <P>
 <HR>
 <H1><A NAME="bugs">BUGS</A></H1>
@@ -234,8 +237,8 @@ ActiveState port of Perl 5.6. It has <STRONG>not</STRONG> been tested on Windows
 <P>
 <HR>
 <H1><A NAME="version">VERSION</A></H1>
-<P>This man page documents Win32::SystemInfo version 0.03</P>
-<P>January 12, 2001.</P>
+<P>This man page documents Win32::SystemInfo version 0.04</P>
+<P>February 5, 2001.</P>
 <P>
 <HR>
 <H1><A NAME="author">AUTHOR</A></H1>

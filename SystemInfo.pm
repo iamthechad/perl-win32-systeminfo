@@ -4,11 +4,11 @@ require 5.005_62;
 use strict;
 use warnings;
 use Win32::API;
-use Win32::TieRegistry;
+use Win32::TieRegistry qw(:KEY_);
 
 use vars qw($VERSION);
 
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 use constant PROCESSOR_INTEL_386 => 386;
 use constant PROCESSOR_INTEL_486 => 486;
@@ -125,7 +125,7 @@ sub ProcessorInfo (;\%)
    $Registry->Delimiter("/");
    for (my $i = 0; $i < $num_proc; $i++) {
     my $procinfo = 
-	$Registry->{"LMachine/Hardware/Description/System/CentralProcessor/$i"};
+	$Registry->Open("LMachine/Hardware/Description/System/CentralProcessor/$i",{Access=>KEY_READ()});
 	my %prochash;
 	$prochash{Identifier} = $procinfo->GetValue("Identifier");
 	$prochash{VendorIdentifier} = $procinfo->GetValue("VendorIdentifier");
@@ -234,7 +234,7 @@ B<Win32::SystemInfo::MemoryStatus>(%mHash,[$format]);
    TotalPage                   - Allocated size of page (swap) file.
    AvailPage                   - Available page file memory.
    TotalVirtual                - Total physical + maximum page file.
-   AvailableVirtual            - Total amount of available memory.
+   AvailVirtual                - Total amount of available memory.
    
    Values returned through the hash can also be specified by setting
    them before the function is called. 
@@ -355,6 +355,9 @@ ActiveState port of Perl 5.6. It has B<not> been tested on Windows 2000 yet.
         performs the Win9x CPU speed determination.
  0.03 - Fixed warning "use of uninitialized value" when calling MemoryInfo
         with no size argument.
+ 0.04 - Fixed "GetValue" error when calling ProcessorInfo as non-admin user
+        on Windows NT
+      - Fixed documentation bug: "AvailableVirtual" to "AvailVirtual"
 
 =head1 BUGS
 
@@ -362,9 +365,9 @@ Please report.
 
 =head1 VERSION
 
-This man page documents Win32::SystemInfo version 0.03
+This man page documents Win32::SystemInfo version 0.04
 
-January 12, 2001.
+February 5, 2001.
 
 =head1 AUTHOR
 

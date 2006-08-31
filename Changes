@@ -9,3 +9,8 @@ Revision history for Perl extension Win32::SystemInfo.
 
 0.03  Fri Jan 12, 2001
 	- Fixed warning when calling MemoryInfo
+	
+0.04  Mon Feb 5, 2001
+	- Fixed "GetValue" error when running as
+	  non-admin user on WinNT
+	- Fixed documentation error
