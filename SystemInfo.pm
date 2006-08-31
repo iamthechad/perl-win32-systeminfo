@@ -8,7 +8,7 @@ use Win32::TieRegistry qw(:KEY_);
 
 use vars qw($VERSION);
 
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 use constant PROCESSOR_INTEL_386 => 386;
 use constant PROCESSOR_INTEL_486 => 486;
@@ -35,8 +35,8 @@ sub MemoryStatus (\%;$) {
    my $MemFormat;        #divisor for format
    my $dwMSLength;       #validator from fn call
 
-   $MemFormat = ($ret_type =~ /^[BKMG]B?$/) ? 
-   	$fmt_types{$ret_type} : $fmt_types{B};
+   $MemFormat = ($ret_type =~ /^[BKMG]B?$/) ?
+            $fmt_types{$ret_type} : $fmt_types{B};
 
    my $GlobalMemoryStatus ||= 
    new Win32::API("kernel32", "GlobalMemoryStatus", ["P"], "V") or return;
@@ -79,6 +79,80 @@ my $check_OS = sub () # Attempt to make this as private as possible
  elsif ($dwPlatformId == 1) {  $osType = "Win9x"; }
  
  return ($osType ne "") ? $osType : undef;
+};
+#==========================
+
+#==========================
+my $procNameLookup = sub(%$) #another private sub
+{
+    my $infoHash = shift;
+    my $cpuVendor = shift;
+
+    my $family = $infoHash->{family};
+    my $model = $infoHash->{model};
+
+    # build a table based on vendor, otherwise a table to include
+    # all entries would be a pain
+    if ($cpuVendor =~ /intel/i)
+    {
+	my %cpuNameTable;
+
+	$cpuNameTable{4}->{0} = "Intel 486DX";
+	$cpuNameTable{4}->{1} = "Intel 486DX";
+	$cpuNameTable{4}->{2} = "Intel 486SX";
+	$cpuNameTable{4}->{3} = "Intel 487, DX2, or DX2 Overdrive";
+	$cpuNameTable{4}->{4} = "Intel 486 SL";
+	$cpuNameTable{4}->{5} = "Intel SX2";
+	$cpuNameTable{4}->{7} = "Intel Write-Back Enhanced DX2";
+	$cpuNameTable{4}->{8} = "Intel DX4 or DX4 Overdrive";
+	$cpuNameTable{5}->{1} = "Intel Pentium or Pentium Overdrive";
+	$cpuNameTable{5}->{2} = "Intel Pentium or Pentium Overdrive";
+	$cpuNameTable{5}->{3} = "Intel Pentium Overdrive for 486 systems";
+	$cpuNameTable{5}->{4} = "Intel Pentium or Pentium Overdrive with MMX";
+	$cpuNameTable{6}->{1} = "Intel Pentium Pro";
+	$cpuNameTable{6}->{3} = "Intel Pentium II";
+	$cpuNameTable{6}->{5} = "Intel Pentium II, Pentium II Xeon, or Celeron";
+	$cpuNameTable{6}->{6} = "Intel Celeron";
+	$cpuNameTable{6}->{7} = "Intel Pentium III or Pentium III Xeon";
+	$cpuNameTable{6}->{8} = "Intel Pentium III, Pentium III Xeon, or Celeron";
+	$cpuNameTable{6}->{10} = "Intel Pentium III Xeon";
+	$cpuNameTable{6}->{3} = "Intel Pentium II Overdrive";
+	$cpuNameTable{16}->{0} = "Intel Pentium 4";
+
+	return (exists($cpuNameTable{$family}->{$model})) ?
+		  $cpuNameTable{$family}->{$model} : "Unknown";
+    }
+    elsif ($cpuVendor =~ /AMD/i)
+    {
+	my %cpuNameTable;
+
+	$cpuNameTable{5}->{0} = "AMD-K5";
+	$cpuNameTable{5}->{1} = "AMD-K5";
+	$cpuNameTable{5}->{2} = "AMD-K5";
+	$cpuNameTable{5}->{3} = "AMD-K5";
+	$cpuNameTable{5}->{6} = "AMD-K6";
+	$cpuNameTable{5}->{7} = "AMD-K6";
+	$cpuNameTable{5}->{8} = "AMD-K6-2";
+	$cpuNameTable{5}->{9} = "AMD-K6 III";
+	$cpuNameTable{6}->{1} = "AMD Athlon";
+	$cpuNameTable{6}->{2} = "AMD Athlon";
+	$cpuNameTable{6}->{3} = "AMD Duron";
+	$cpuNameTable{6}->{4} = "AMD Athlon";
+	$cpuNameTable{6}->{6} = "AMD Athlon MP or Mobile Athlon";
+	$cpuNameTable{6}->{7} = "AMD Mobile Duron";
+
+	# the model numbering on these is a bit odd, but we're
+	# in the ballpark with this answer
+	if ($family == 4)
+	{
+	    return "Am486 or Am5x86";
+	}
+
+	return (exists($cpuNameTable{$family}->{$model})) ?
+	          $cpuNameTable{$family}->{$model} : "Unknown";
+    }
+
+    return "Unknown";    
 };
 #==========================
 
@@ -130,28 +204,34 @@ sub ProcessorInfo (;\%)
 	my %prochash;
 	$prochash{Identifier} = $procinfo->GetValue("Identifier");
 	$prochash{VendorIdentifier} = $procinfo->GetValue("VendorIdentifier");
-	if ($OS eq "WinNT") {
-		$prochash{MHZ} = oct($procinfo->GetValue("~MHz"));
-	} else {
-		# Get speed from external DLL, since the registry value does not
-		# exist in Win9x
-		$prochash{MHZ} = -1;
-		my $dll = $INC{'Win32/SystemInfo.pm'};
-		$dll =~ s/(.*?)SystemInfo.pm/$1/i;
-		$dll .= "cpuspd.dll";
-		my $CpuSpeed = new Win32::API($dll, "GetCpuSpeed", ["V"], "I");
-		if (!defined $CpuSpeed) {
-			$allHash->{"Processor$i"} = \%prochash;
-			return $proc_type;
-		}
-		my $aInfo = $CpuSpeed->Call();
-		my $pInfo = pack("L",$aInfo);
-		my $sInfo = unpack("P16",$pInfo);
-		my ($in_cycles, $ex_ticks, $raw_freq, $norm_freq) =
-  		unpack("L4",$sInfo);
-  		$prochash{MHZ} = ($norm_freq != 0? $norm_freq:-1);
+	$prochash{MHZ} = -1;
+	my $dll = $INC{'Win32/SystemInfo.pm'};
+	$dll =~ s/(.*?)SystemInfo.pm/$1/i;
+	$dll .= "cpuspd.dll";
+	my $CpuSpeed = new Win32::API($dll, "GetCpuSpeed", ["V"], "I");
+	if (!defined $CpuSpeed) {
+		$allHash->{"Processor$i"} = \%prochash;
+		return $proc_type;
 	}
-
+	my $aInfo = $CpuSpeed->Call();
+	my $pInfo = pack("L",$aInfo);
+	my $sInfo = unpack("P16",$pInfo);
+	my ($in_cycles, $ex_ticks, $raw_freq, $norm_freq) =
+	unpack("L4",$sInfo);
+	$prochash{MHZ} = ($norm_freq != 0? $norm_freq:-1);
+	my $FamilyInfo = new Win32::API($dll, "wincpuidext", ["V"], "I");
+	if (!defined $FamilyInfo) {
+	    $prochash{ProcessorName} = "Unknown";
+	}
+	else
+	{
+	    my $fInfo = $FamilyInfo->Call();
+	    my %pNameHash;
+	    $pNameHash{stepping} = $fInfo & 0xF;
+	    $pNameHash{model} = ($fInfo & 0xF0) >> 4;
+	    $pNameHash{family} = ($fInfo & 0xF00) >> 8;
+	    $prochash{ProcessorName} = &$procNameLookup(\%pNameHash,$prochash{VendorIdentifier});
+	}
 	$allHash->{"Processor$i"} = \%prochash;
    }
   }
@@ -203,7 +283,7 @@ Win32::SystemInfo - Memory and Processor information on Win32 systems
 With this module you can get total/free memory on Win32 systems,
 including installed RAM (physical memory) and page file. This module will
 also let you access processor information, including processor family
-(386,486,etc), speed, vendor, and revision information. 
+(386,486,etc), speed, name, vendor, and revision information. 
 
 =head1 DESCRIPTION
 
@@ -235,7 +315,7 @@ B<Win32::SystemInfo::MemoryStatus>(%mHash,[$format]);
    TotalPage                   - Allocated size of page (swap) file.
    AvailPage                   - Available page file memory.
    TotalVirtual                - Total physical + maximum page file.
-   AvailVirtual                - Total amount of available memory.
+   AvailVirtual                 - Total amount of available memory.
    
    Values returned through the hash can also be specified by setting
    them before the function is called. 
@@ -284,6 +364,8 @@ $proc = B<Win32::SystemInfo::ProcessorInfo>([%pHash]);
    VendorIdentifier             - The vendor name of the processor
    MHZ                          - The speed in MHz of the processor
                                 - Returns -1 if unable to determine.
+   ProcessorName                - The name of the processor, such as
+                                - "Intel Pentium", or "AMD Athlon".
                                       
    PLEASE read the note about the MHz value in Caveats, below.
 
@@ -295,10 +377,10 @@ No functions are exported.
 
 Installation is simple. Follow these steps:
 
-perl makefile.pl
-nmake
-nmake test
-nmake install
+ perl makefile.pl
+ nmake
+ nmake test
+ nmake install
 
 Copy the SystemInfo.html file into whatever directory you keep your
 documentation in. I haven't figured out yet how to automatically copy
@@ -340,6 +422,12 @@ all Athlons, and Duron.) The return value for MHz should always be checked
 in a Win9x environment to verify that it is valid. (Invalid processors, or
 other errors will return a -1.)
 
+The ProcessorName value returned by ProcessorInfo may sometimes
+reference more than one processor. For example, the returned value
+may be "Intel Pentium or Pentium Overdrive". There are ways to tell
+these processors apart programmatically, but I did not take the time
+to implement the extra code in this release.
+
 The ProcessorInfo function has been only tested in these environments:
 Windows 98, Single Pentium II processor
 Windows NT 4.0, Single Pentium III processor
@@ -347,7 +435,8 @@ Windows NT 4.0, Single Pentium III processor
 All feedback on other configurations is greatly welcomed.  
 
 This module has been created and tested on Windows 98 and WinNT 4.0 on
-ActiveState port of Perl 5.6. It has B<not> been tested on Windows 2000 yet.
+ActiveState port of Perl 5.6. It has B<not> been extensively
+tested on Windows 2000 yet.
 
 =head1 CHANGES
 
@@ -357,21 +446,24 @@ ActiveState port of Perl 5.6. It has B<not> been tested on Windows 2000 yet.
  0.03 - Fixed warning "use of uninitialized value" when calling MemoryStatus
         with no size argument.
  0.04 - Fixed "GetValue" error when calling ProcessorInfo as non-admin user
-        on Windows NT
-      - Fixed documentation bug: "AvailableVirtual" to "AvailVirtual"
+          on WindowsNT
+        - Fixed documentation bug: "AvailableVirtual" to "AvailVirtual"
  0.05 - Fixed bug introduced in 0.03 where $format was ignored in
-        MemoryStatus. All results were returned in bytes regardless of
-        $format parameter.
-
+          MemoryStatus. All results were returned in bytes regardless of
+          $format parameter.
+ 0.06 - Added new entry to processor information hash to display the name
+          of the processor. WindowsNT and 2K now use the DLL to determine
+          CPU speed as well.
+        
 =head1 BUGS
 
 Please report.
 
 =head1 VERSION
 
-This man page documents Win32::SystemInfo version 0.05
+This man page documents Win32::SystemInfo version 0.06
 
-February 6, 2001.
+July 13, 2001.
 
 =head1 AUTHOR
 

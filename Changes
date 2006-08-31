@@ -19,3 +19,7 @@ Revision history for Perl extension Win32::SystemInfo.
 	- Fixed bug introduced in 0.03 where the $format parameter
 	  to MemoryStatus was ignored, and all results returned
 	  as bytes.
+
+0.06 - Added new entry to processor information hash to display the name
+          of the processor. WindowsNT and 2K now use the DLL to determine
+          CPU speed as well.	  
