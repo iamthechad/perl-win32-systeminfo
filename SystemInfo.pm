@@ -8,7 +8,7 @@ use Win32::TieRegistry;
 
 use vars qw($VERSION);
 
-$VERSION = '0.01';
+$VERSION = '0.02';
 
 use constant PROCESSOR_INTEL_386 => 386;
 use constant PROCESSOR_INTEL_486 => 486;
@@ -130,7 +130,28 @@ sub ProcessorInfo (;\%)
 	my %prochash;
 	$prochash{Identifier} = $procinfo->GetValue("Identifier");
 	$prochash{VendorIdentifier} = $procinfo->GetValue("VendorIdentifier");
-	$prochash{MHZ} = oct($procinfo->GetValue("~MHz"));
+	if ($OS eq "WinNT") {
+		$prochash{MHZ} = oct($procinfo->GetValue("~MHz"));
+	} else {
+		# Get speed from external DLL, since the registry value does not
+		# exist in Win9x
+		$prochash{MHZ} = -1;
+		my $dll = $INC{'Win32/SystemInfo.pm'};
+		$dll =~ s/(.*?)SystemInfo.pm/$1/i;
+		$dll .= "cpuspd.dll";
+		my $CpuSpeed = new Win32::API($dll, "GetCpuSpeed", ["V"], "I");
+		if (!defined $CpuSpeed) {
+			$allHash->{"Processor$i"} = \%prochash;
+			return $proc_type;
+		}
+		my $aInfo = $CpuSpeed->Call();
+		my $pInfo = pack("L",$aInfo);
+		my $sInfo = unpack("P16",$pInfo);
+		my ($in_cycles, $ex_ticks, $raw_freq, $norm_freq) =
+  		unpack("L4",$sInfo);
+  		$prochash{MHZ} = ($norm_freq != 0? $norm_freq:-1);
+	}
+
 	$allHash->{"Processor$i"} = \%prochash;
    }
   }
@@ -262,6 +283,9 @@ $proc = B<Win32::SystemInfo::ProcessorInfo>([%pHash]);
                                 - "x86 Family 6 Model 7 Stepping 3"
    VendorIdentifier             - The vendor name of the processor
    MHZ                          - The speed in MHz of the processor
+                                - Returns -1 if unable to determine.
+                                      
+   PLEASE read the note about the MHz value in Caveats, below.
 
 =back
 
@@ -269,10 +293,26 @@ No functions are exported.
 
 =head1 INSTALLATION
 
-This module can be used by simply placing it in your /Win32 directory
-somewhere in @INC.
+Installation is simple. Follow these steps:
 
-Use pod2html to build a html version of this POD.
+perl makefile.pl
+nmake
+nmake test
+nmake install
+
+Copy the SystemInfo.html file into whatever directory you keep your
+documentation in. I haven't figured out yet how to automatically copy
+it over, sorry.
+
+I've noticed that ActiveState can give an error about not being
+able to find perl when processing the makefile.pl file on Win9x.
+To get around this, open makefile.pl and add another key/value
+pair into WriteMakefile() that looks like this:
+'PERL'	=> 'full/path/to/your/perl.exe',
+That should do the trick!
+
+This module can also be used by simply placing it and the included
+DLL in your /Win32 directory somewhere in @INC.
 
 This module requires
 Win32::API module by Aldo Calpini
@@ -294,6 +334,12 @@ the MemoryStatus function will always return 2 GB for TotalPhys.
 Similarly, if the total available memory is between 2 and 4 GB, AvailPhys
 will be rounded down to 2 GB.
 
+ProcessorInfo will only reliably return CPU speed for Intel chips, and AMD
+chips that support the time stamp counter. (This appears to be K6-2, K6-III,
+all Athlons, and Duron.) The return value for MHz should always be checked
+in a Win9x environment to verify that it is valid. (Invalid processors, or
+other errors will return a -1.)
+
 The ProcessorInfo function has been only tested in these environments:
 Windows 98, Single Pentium II processor
 Windows NT 4.0, Single Pentium III processor
@@ -306,6 +352,8 @@ ActiveState port of Perl 5.6. It has B<not> been tested on Windows 2000 yet.
 =head1 CHANGES
 
  0.01 - Initial Release
+ 0.02 - Fixed CPU speed reporting for Win9x. Module now includes a DLL that
+        performs the Win9x CPU speed determination.
 
 =head1 BUGS
 
@@ -313,9 +361,9 @@ Please report.
 
 =head1 VERSION
 
-This man page documents Win32::SystemInfo version 0.01
+This man page documents Win32::SystemInfo version 0.02
 
-September 7, 2000.
+October 31,2000.
 
 =head1 AUTHOR
 

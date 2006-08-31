@@ -4,3 +4,5 @@ Revision history for Perl extension Win32::SystemInfo.
 	- original version; created by h2xs 1.20 with options
 		-A -X Win32::SystemInfo
 
+0.02  Tues Oct 31 2000
+	- Fixed CPU speed detection bug for Win9x

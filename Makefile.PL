@@ -4,5 +4,6 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     'NAME'		=> 'Win32::SystemInfo',
     'VERSION_FROM'	=> 'SystemInfo.pm', # finds $VERSION
-    'PREREQ_PM'		=> {}, # e.g., Module::Name => 1.1
+    'PREREQ_PM'		=> {'Win32::API' => 0,
+    			    'Win32::TieRegistry' => 0}, # e.g., Module::Name => 1.1
 );
