@@ -1,0 +1,6 @@
+Revision history for Perl extension Win32::SystemInfo.
+
+0.01  Mon Sep 11 08:33:22 2000
+	- original version; created by h2xs 1.20 with options
+		-A -X Win32::SystemInfo
+
