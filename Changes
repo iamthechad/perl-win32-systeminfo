@@ -6,3 +6,6 @@ Revision history for Perl extension Win32::SystemInfo.
 
 0.02  Tues Oct 31 2000
 	- Fixed CPU speed detection bug for Win9x
+
+0.03  Fri Jan 12, 2001
+	- Fixed warning when calling MemoryInfo

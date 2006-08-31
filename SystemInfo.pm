@@ -8,7 +8,7 @@ use Win32::TieRegistry;
 
 use vars qw($VERSION);
 
-$VERSION = '0.02';
+$VERSION = '0.03';
 
 use constant PROCESSOR_INTEL_386 => 386;
 use constant PROCESSOR_INTEL_486 => 486;
@@ -26,7 +26,7 @@ sub MemoryStatus (\%;$) {
 #==================
 #
    my $return = shift;    #hash to return
-   my $ret_type = shift;  #what format does the user want?
+   my $ret_type ||= shift || "B";  #what format does the user want?
    my %fmt_types = 
    ( B => 1, KB => 1024, MB => 1024*1024, GB => 1024*1024*1024);
    my @params = qw(MemLoad TotalPhys AvailPhys TotalPage
@@ -35,8 +35,7 @@ sub MemoryStatus (\%;$) {
    my $MemFormat;        #divisor for format
    my $dwMSLength;       #validator from fn call
 
-   $MemFormat = 
-   ($ret_type =~ /^[BKMG]B?$/) ? $fmt_types{$ret_type} : $fmt_types{B};
+   $MemFormat = ($ret_type =~ /^[BKMG]B?$/);
 
    my $GlobalMemoryStatus ||= 
    new Win32::API("kernel32", "GlobalMemoryStatus", ["P"], "V") or return;
@@ -354,6 +353,8 @@ ActiveState port of Perl 5.6. It has B<not> been tested on Windows 2000 yet.
  0.01 - Initial Release
  0.02 - Fixed CPU speed reporting for Win9x. Module now includes a DLL that
         performs the Win9x CPU speed determination.
+ 0.03 - Fixed warning "use of uninitialized value" when calling MemoryInfo
+        with no size argument.
 
 =head1 BUGS
 
@@ -361,9 +362,9 @@ Please report.
 
 =head1 VERSION
 
-This man page documents Win32::SystemInfo version 0.02
+This man page documents Win32::SystemInfo version 0.03
 
-October 31,2000.
+January 12, 2001.
 
 =head1 AUTHOR
 
@@ -371,7 +372,7 @@ Chad Johnston C<<>cjohnston@rockstardevelopment.comC<>>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2000 by Chad Johnston. All rights reserved.
+Copyright (C) 2001 by Chad Johnston. All rights reserved.
 
 =head1 LICENSE
 

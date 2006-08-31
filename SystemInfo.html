@@ -175,9 +175,9 @@ $proc = <STRONG>Win32::SystemInfo::ProcessorInfo</STRONG>([%pHash]);
 <HR>
 <H1><A NAME="installation">INSTALLATION</A></H1>
 <P>Installation is simple. Follow these steps:</P>
-<P>perl makefile.pl<br>
-nmake<br>
-nmake test<br>
+<P>perl makefile.pl
+nmake
+nmake test
 nmake install</P>
 <P>Copy the SystemInfo.html file into whatever directory you keep your
 documentation in. I haven't figured out yet how to automatically copy
@@ -190,8 +190,8 @@ pair into <CODE>WriteMakefile()</CODE> that looks like this:
 That should do the trick!</P>
 <P>This module can also be used by simply placing it and the included
 DLL in your /Win32 directory somewhere in @INC.</P>
-<P>This module requires<br>
-Win32::API module by Aldo Calpini<br>
+<P>This module requires
+Win32::API module by Aldo Calpini
 Win32::TieRegistry by Tye McQueen</P>
 <P>
 <HR>
@@ -224,7 +224,9 @@ ActiveState port of Perl 5.6. It has <STRONG>not</STRONG> been tested on Windows
 <PRE>
  0.01 - Initial Release
  0.02 - Fixed CPU speed reporting for Win9x. Module now includes a DLL that
-        performs the Win9x CPU speed determination.</PRE>
+        performs the Win9x CPU speed determination.
+ 0.03 - Fixed warning &quot;use of uninitialized value&quot; when calling MemoryInfo
+        with no size argument.</PRE>
 <P>
 <HR>
 <H1><A NAME="bugs">BUGS</A></H1>
@@ -232,8 +234,8 @@ ActiveState port of Perl 5.6. It has <STRONG>not</STRONG> been tested on Windows
 <P>
 <HR>
 <H1><A NAME="version">VERSION</A></H1>
-<P>This man page documents Win32::SystemInfo version 0.02</P>
-<P>October 31,2000.</P>
+<P>This man page documents Win32::SystemInfo version 0.03</P>
+<P>January 12, 2001.</P>
 <P>
 <HR>
 <H1><A NAME="author">AUTHOR</A></H1>
@@ -241,7 +243,7 @@ ActiveState port of Perl 5.6. It has <STRONG>not</STRONG> been tested on Windows
 <P>
 <HR>
 <H1><A NAME="copyright">COPYRIGHT</A></H1>
-<P>Copyright (C) 2000 by Chad Johnston. All rights reserved.</P>
+<P>Copyright (C) 2001 by Chad Johnston. All rights reserved.</P>
 <P>
 <HR>
 <H1><A NAME="license">LICENSE</A></H1>
@@ -251,6 +253,8 @@ it under the same terms as Perl itself.</P>
 <HR>
 <H1><A NAME="see also">SEE ALSO</A></H1>
 <P>perl(1).</P>
+<P>Win32
+Win32/Utilities</P>
 
 </BODY>
 
