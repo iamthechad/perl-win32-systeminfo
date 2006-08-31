@@ -8,9 +8,14 @@ Revision history for Perl extension Win32::SystemInfo.
 	- Fixed CPU speed detection bug for Win9x
 
 0.03  Fri Jan 12, 2001
-	- Fixed warning when calling MemoryInfo
+	- Fixed warning when calling MemoryStatus
 	
 0.04  Mon Feb 5, 2001
 	- Fixed "GetValue" error when running as
 	  non-admin user on WinNT
 	- Fixed documentation error
+	
+0.05  Tues Feb 6, 2001
+	- Fixed bug introduced in 0.03 where the $format parameter
+	  to MemoryStatus was ignored, and all results returned
+	  as bytes.
