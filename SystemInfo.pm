@@ -8,7 +8,7 @@ use Win32::TieRegistry qw(:KEY_);
 
 use vars qw($VERSION);
 
-$VERSION = '0.06';
+$VERSION = '0.07';
 
 use constant PROCESSOR_INTEL_386 => 386;
 use constant PROCESSOR_INTEL_486 => 486;
@@ -208,30 +208,25 @@ sub ProcessorInfo (;\%)
 	my $dll = $INC{'Win32/SystemInfo.pm'};
 	$dll =~ s/(.*?)SystemInfo.pm/$1/i;
 	$dll .= "cpuspd.dll";
-	my $CpuSpeed = new Win32::API($dll, "GetCpuSpeed", ["V"], "I");
-	if (!defined $CpuSpeed) {
+	my $CpuInfo = new Win32::API($dll, "getcpuinfo", ["V"], "I");
+	if (!defined $CpuInfo) {
+                $prochash{ProcessorName} = "Unknown";
 		$allHash->{"Processor$i"} = \%prochash;
 		return $proc_type;
 	}
-	my $aInfo = $CpuSpeed->Call();
+	my $aInfo = $CpuInfo->Call();
 	my $pInfo = pack("L",$aInfo);
-	my $sInfo = unpack("P16",$pInfo);
-	my ($in_cycles, $ex_ticks, $raw_freq, $norm_freq) =
-	unpack("L4",$sInfo);
+	my $sInfo = unpack("P32",$pInfo);
+	my ($in_cycles, $ex_ticks, $raw_freq, $norm_freq,$fInfo) =
+	unpack("L5",$sInfo);
 	$prochash{MHZ} = ($norm_freq != 0? $norm_freq:-1);
-	my $FamilyInfo = new Win32::API($dll, "wincpuidext", ["V"], "I");
-	if (!defined $FamilyInfo) {
-	    $prochash{ProcessorName} = "Unknown";
-	}
-	else
-	{
-	    my $fInfo = $FamilyInfo->Call();
-	    my %pNameHash;
-	    $pNameHash{stepping} = $fInfo & 0xF;
-	    $pNameHash{model} = ($fInfo & 0xF0) >> 4;
-	    $pNameHash{family} = ($fInfo & 0xF00) >> 8;
-	    $prochash{ProcessorName} = &$procNameLookup(\%pNameHash,$prochash{VendorIdentifier});
-	}
+	
+	my %pNameHash;
+	$pNameHash{stepping} = $fInfo & 0xF;
+	$pNameHash{model} = ($fInfo & 0xF0) >> 4;
+	$pNameHash{family} = ($fInfo & 0xF00) >> 8;
+	$prochash{ProcessorName} = &$procNameLookup(\%pNameHash,$prochash{VendorIdentifier});
+
 	$allHash->{"Processor$i"} = \%prochash;
    }
   }
@@ -397,8 +392,8 @@ This module can also be used by simply placing it and the included
 DLL in your /Win32 directory somewhere in @INC.
 
 This module requires
-Win32::API module by Aldo Calpini
-Win32::TieRegistry by Tye McQueen
+<br>Win32::API module by Aldo Calpini
+
 
 =head1 CAVEATS
 
@@ -431,6 +426,7 @@ to implement the extra code in this release.
 The ProcessorInfo function has been only tested in these environments:
 Windows 98, Single Pentium II processor
 Windows NT 4.0, Single Pentium III processor
+Windows XP Pro, Single Athlon processor
 
 All feedback on other configurations is greatly welcomed.  
 
@@ -454,6 +450,7 @@ tested on Windows 2000 yet.
  0.06 - Added new entry to processor information hash to display the name
           of the processor. WindowsNT and 2K now use the DLL to determine
           CPU speed as well.
+ 0.07 - Changed contact information. Recompiled DLL to remove some extraneous calls.
         
 =head1 BUGS
 
@@ -461,17 +458,17 @@ Please report.
 
 =head1 VERSION
 
-This man page documents Win32::SystemInfo version 0.06
+This man page documents Win32::SystemInfo version 0.07
 
-July 13, 2001.
+April 29, 2002.
 
 =head1 AUTHOR
 
-Chad Johnston C<<>cjohnston@rockstardevelopment.comC<>>
+Chad Johnston C<<>cjohnston@megatome.comC<>>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2001 by Chad Johnston. All rights reserved.
+Copyright (C) 2002 by Chad Johnston. All rights reserved.
 
 =head1 LICENSE
 

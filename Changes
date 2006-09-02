@@ -22,4 +22,6 @@ Revision history for Perl extension Win32::SystemInfo.
 
 0.06 - Added new entry to processor information hash to display the name
           of the processor. WindowsNT and 2K now use the DLL to determine
-          CPU speed as well.	  
+          CPU speed as well.
+
+0.07 - Changed contact information. Recompiled DLL to remove some extraneous calls.   
