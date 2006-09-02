@@ -25,3 +25,7 @@ Revision history for Perl extension Win32::SystemInfo.
           CPU speed as well.
 
 0.07 - Changed contact information. Recompiled DLL to remove some extraneous calls.   
+
+0.08 - Added more definitions for recent CPUs. Added dependency on version 0.40
+          of Win32::API. Reworked Win32::API calls. Changed calls in DLL to
+          eliminate need to pack and unpack arguments.

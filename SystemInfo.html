@@ -18,6 +18,7 @@
 	<LI><A HREF="#installation">INSTALLATION</A></LI>
 	<LI><A HREF="#caveats">CAVEATS</A></LI>
 	<LI><A HREF="#changes">CHANGES</A></LI>
+	<LI><A HREF="#bugs">BUGS</A></LI>
 	<LI><A HREF="#version">VERSION</A></LI>
 	<LI><A HREF="#author">AUTHOR</A></LI>
 	<LI><A HREF="#copyright">COPYRIGHT</A></LI>
@@ -35,36 +36,28 @@
 <H1><A NAME="synopsis">SYNOPSIS</A></H1>
 <PRE>
     use Win32::SystemInfo;</PRE>
-<P># Get Memory Information
-</P>
+<P># Get Memory Information</P>
 <PRE>
-
     my %mHash;
         if (Win32::SystemInfo::MemoryStatus(%mHash))
         {
          ...process results...
         }</PRE>
 <PRE>
-
-        To get specific values: 
+        To get specific values:
     my %mHash = (TotalPhys =&gt; 0, AvailPhys =&gt; 0);
         if (Win32::SystemInfo::MemoryStatus(%mHash))
         {
          ...mHash contains only TotalPhys and AvailPhys values...
         }</PRE>
 <PRE>
-
     Change the default return value:
         Win32::SystemInfo::MemoryStatus(%mHash,&quot;MB&quot;);</PRE>
-<PRE>
-
-# Get Processor Information</PRE>
+<P># Get Processor Information</P>
 <PRE>
     my $proc = Win32::SystemInfo::ProcessorInfo();
-        if ($proc &gt;= 586) { ... }
-</PRE>
+        if ($proc &gt;= 586) { ... }</PRE>
 <PRE>
-
         my %phash;
         Win32::SystemInfo::ProcessorInfo(%phash);
         for (my $i = 0; $i &lt; $phash{NumProcessors}; $i++) {
@@ -93,10 +86,8 @@ also let you access processor information, including processor family
                                  of magnitude of the results. (See below)</PRE>
 <PRE>
    Determines the current memory status of a Win32 machine. Populates
-   %mHash with the results. Function returns undef on failure.
-</PRE>
+   %mHash with the results. Function returns undef on failure.</PRE>
 <PRE>
-
    Values returned through the hash:
    MemLoad                     - Windows NT 3.1 to 4.0: The percentage of
                                  approximately the last 1000 pages of physical
@@ -110,16 +101,13 @@ also let you access processor information, including processor family
    TotalVirtual                - Total physical + maximum page file.
    AvailVirtual                 - Total amount of available memory.</PRE>
 <PRE>
-
    Values returned through the hash can also be specified by setting
-   them before the function is called. 
+   them before the function is called.
        my %mHash = (TotalPhys =&gt; 0);
        Win32::MemoryInfo::MemoryStatus(%mHash);</PRE>
 <PRE>
-
    Will return only the total physical memory.</PRE>
 <PRE>
-
    MemoryStatus return values in bytes by default. This can be changed with
    the $format parameter. Valid values for $format are:
        B        -  Bytes (default)
@@ -133,10 +121,8 @@ $proc = <STRONG>Win32::SystemInfo::ProcessorInfo</STRONG>([%pHash]);
 <PRE>
    Determines the processor information of a Win32 computer. Returns a &quot;quick&quot;
    value or undef on failure. Can also populate %pHash with detailed information
-   on all processors present in the system.
-</PRE>
+   on all processors present in the system.</PRE>
 <PRE>
-
    $proc                        - Contains a numerical representation of the
                                 - processor level for Intel machines. For
                                 - example, a Pentium will return 586.
@@ -147,18 +133,15 @@ $proc = <STRONG>Win32::SystemInfo::ProcessorInfo</STRONG>([%pHash]);
                                 - ALPHA: Alpha architecture
                                 - UNKNOWN: Unknown architecture</PRE>
 <PRE>
-
-   %pHash                       - Optional parameter. Will be filled with 
+   %pHash                       - Optional parameter. Will be filled with
                                 - information about all processors.</PRE>
 <PRE>
-
    Values returned through hash:
    NumProcessors                - The number of processors installed
    ProcessorN                   - A hash containing all info for processor N</PRE>
 <PRE>
-
    Each ProcessorN hash contains the values:
-   Identifier                   - The identifier string for the processor 
+   Identifier                   - The identifier string for the processor
                                 - as found in the registry. The computer I'm
                                 - currently using returns the string
                                 - &quot;x86 Family 6 Model 7 Stepping 3&quot;
@@ -168,7 +151,6 @@ $proc = <STRONG>Win32::SystemInfo::ProcessorInfo</STRONG>([%pHash]);
    ProcessorName                - The name of the processor, such as
                                 - &quot;Intel Pentium&quot;, or &quot;AMD Athlon&quot;.</PRE>
 <PRE>
-
    PLEASE read the note about the MHz value in Caveats, below.</PRE>
 <P></P></DL>
 <P>No functions are exported.</P>
@@ -193,12 +175,11 @@ That should do the trick!</P>
 <P>This module can also be used by simply placing it and the included
 DLL in your /Win32 directory somewhere in @INC.</P>
 <P>This module requires
-<br>Win32::API module by Aldo Calpini
-<br>Win32::TieRegistry Module by Tye McQueen</P>
+&lt;br&gt;Win32::API module by Aldo Calpini</P>
 <P>
 <HR>
 <H1><A NAME="caveats">CAVEATS</A></H1>
-<P>The information returned by the MemoryStatus function is volatile. 
+<P>The information returned by the MemoryStatus function is volatile.
 There is no guarantee that two sequential calls to this function
 will return the same information.</P>
 <P>On computers with more than 4 GB of memory, the MemoryStatus function
@@ -206,7 +187,7 @@ can return incorrect information. Windows 2000 reports a value of -1
 to indicate an overflow. Earlier versions of Windows NT report a value
 that is the real amount of memory, modulo 4 GB.</P>
 <P>On Intel x86 computers with more than 2 GB and less than 4 GB of memory,
-the MemoryStatus function will always return 2 GB for TotalPhys. 
+the MemoryStatus function will always return 2 GB for TotalPhys.
 Similarly, if the total available memory is between 2 and 4 GB, AvailPhys
 will be rounded down to 2 GB.</P>
 <P>ProcessorInfo will only reliably return CPU speed for Intel chips, and AMD
@@ -220,9 +201,9 @@ may be ``Intel Pentium or Pentium Overdrive''. There are ways to tell
 these processors apart programmatically, but I did not take the time
 to implement the extra code in this release.</P>
 <P>The ProcessorInfo function has been only tested in these environments:
-<br>Windows 98, Single Pentium II processor
-<br>Windows NT 4.0, Single Pentium III processor
-<br>Windows XP Pro, Single Athlon processor</P>
+Windows 98, Single Pentium II processor
+Windows NT 4.0, Single Pentium III processor
+Windows XP Pro, Single Athlon processor</P>
 <P>All feedback on other configurations is greatly welcomed.</P>
 <P>This module has been created and tested on Windows 98 and WinNT 4.0 on
 ActiveState port of Perl 5.6. It has <STRONG>not</STRONG> been extensively
@@ -246,16 +227,18 @@ tested on Windows 2000 yet.</P>
           of the processor. WindowsNT and 2K now use the DLL to determine
           CPU speed as well.
  0.07 - Changed contact information. Recompiled DLL to remove some extraneous calls.
-</PRE>
-<PRE>
-
-=head1 BUGS</PRE>
+ 0.08 - Added more definitions for recent CPUs. Added dependency on version 0.40
+          of Win32::API. Reworked Win32::API calls. Changed calls in DLL to
+          eliminate need to pack and unpack arguments.</PRE>
+<P>
+<HR>
+<H1><A NAME="bugs">BUGS</A></H1>
 <P>Please report.</P>
 <P>
 <HR>
 <H1><A NAME="version">VERSION</A></H1>
-<P>This man page documents Win32::SystemInfo version 0.07</P>
-<P>April 29, 2002.</P>
+<P>This man page documents Win32::SystemInfo version 0.08</P>
+<P>May 14, 2003.</P>
 <P>
 <HR>
 <H1><A NAME="author">AUTHOR</A></H1>
@@ -263,7 +246,7 @@ tested on Windows 2000 yet.</P>
 <P>
 <HR>
 <H1><A NAME="copyright">COPYRIGHT</A></H1>
-<P>Copyright (C) 2002 by Chad Johnston. All rights reserved.</P>
+<P>Copyright (C) 2003 by Chad Johnston. All rights reserved.</P>
 <P>
 <HR>
 <H1><A NAME="license">LICENSE</A></H1>
