@@ -8,273 +8,370 @@ use Win32::TieRegistry qw(:KEY_);
 
 use vars qw($VERSION);
 
-$VERSION = '0.08';
+$VERSION = '0.09';
 
 # Not sure how useful these are anymore -
 # may get rid of them soon.
-use constant PROCESSOR_INTEL_386 => 386;
-use constant PROCESSOR_INTEL_486 => 486;
-use constant PROCESSOR_INTEL_PENTIUM => 586;
-use constant PROCESSOR_MIPS_R4000 => 4000;
-use constant PROCESSOR_ALPHA_21064 => 21064;
-use constant PROCESSOR_ARCHITECTURE_INTEL => 0;
-use constant PROCESSOR_ARCHITECTURE_MIPS  => 1;
-use constant PROCESSOR_ARCHITECTURE_ALPHA => 2;
-use constant PROCESSOR_ARCHITECTURE_PPC => 3;
+use constant PROCESSOR_ARCHITECTURE_INTEL   => 0;
+use constant PROCESSOR_ARCHITECTURE_MIPS    => 1;
+use constant PROCESSOR_ARCHITECTURE_ALPHA   => 2;
+use constant PROCESSOR_ARCHITECTURE_PPC     => 3;
 use constant PROCESSOR_ARCHITECTURE_UNKNOWN => 0xFFFF;
+
+#===========================
+my $check_OS = sub ()    # Attempt to make this as private as possible
+{
+	my $dwPlatformId;
+	my $osType;
+
+	# (See GetVersionEx on MSDN)
+	Win32::API::Struct->typedef(
+		OSVERSIONINFO => qw{
+		  DWORD dwOSVersionInfoSize;
+		  DWORD dwMajorVersion;
+		  DWORD dwMinorVersion;
+		  DWORD dwBuildNumber;
+		  DWORD dwPlatformID;
+		  TCHAR szCSDVersion[128];
+		  }
+	);
+
+	Win32::API->Import( 'kernel32',
+		'BOOL GetVersionEx(LPOSVERSIONINFO lpOSVersionInfo)' )
+	  or die "Could not locate kernel32.dll - SystemInfo.pm cannot continue\n";
+
+	my $OSVERSIONINFO = Win32::API::Struct->new('OSVERSIONINFO');
+	$OSVERSIONINFO->{dwOSVersionInfoSize} =
+	  148;    #Win32::API::Struct->sizeof($OSVERSIONINFO);
+
+	GetVersionEx($OSVERSIONINFO) or return undef;
+	$dwPlatformId = $OSVERSIONINFO->{dwPlatformID};
+	if ( $dwPlatformId == 2 ) {
+		my $majorVersion = $OSVERSIONINFO->{dwMajorVersion};
+		if ( $majorVersion == 4 ) {
+			$osType = "WinNT";
+		}
+		else {
+			$osType = "Win2K";
+		}
+	}
+	elsif ( $dwPlatformId == 1 ) { $osType = "Win9x"; }
+
+	return ( $osType ne "" ) ? $osType : undef;
+};
+
+#==================
+
+#==================
+my $canUse64Bit = sub () { # Another private sub - see if we can do 64 bit
+	eval { my $foo = pack( "Q", 1234 ) };
+	return ($@) ? 0 : 1;
+};
+
+#==================
 
 #==================
 sub MemoryStatus (\%;$) {
-#==================
-#
-   my $return = shift;    #hash to return
-   my $ret_type ||= shift || "B";  #what format does the user want?
-   my %fmt_types =
-   ( B => 1, KB => 1024, MB => 1024*1024, GB => 1024*1024*1024);
-   my @params = qw(MemLoad TotalPhys AvailPhys TotalPage
-                   AvailPage TotalVirtual AvailVirtual);
-   my %results;          #results of fn call
-   my $MemFormat;        #divisor for format
-   my $dwMSLength;       #validator from fn call
 
-   $MemFormat = ($ret_type =~ /^[BKMG]B?$/) ?
-            $fmt_types{$ret_type} : $fmt_types{B};
+	#==================
+	#
+	my $return = shift;    #hash to return
+	my $ret_type ||= shift || "B";    #what format does the user want?
+	my %fmt_types =
+	  ( B => 1, KB => 1024, MB => 1024 * 1024, GB => 1024 * 1024 * 1024 );
+	my @params = qw(MemLoad TotalPhys AvailPhys TotalPage
+	  AvailPage TotalVirtual AvailVirtual);
+	my %results;                      #results of fn call
+	my $MemFormat;                    #divisor for format
+	my $dwMSLength;                   #validator from fn call
 
-   # (See GlobalMemoryStatus on MSDN)
-   # I had to change some of the types to get the struct to
-   # play nicely with Win32::API. The SIZE_T's are actually
-   # DWORDS in previous versions of the Win32 API, so this
-   # change doesn't hurt anything.
-   # The names of the members in the struct are different than
-   # in the API to make my life easier, and to keep the same
-   # return values this method has always had.
-   Win32::API::Struct->typedef( MEMORYSTATUS => qw{
-	   DWORD dwLength;
-	   DWORD MemLoad;
-	   DWORD TotalPhys;
-	   DWORD AvailPhys;
-	   DWORD TotalPage;
-	   DWORD AvailPage;
-	   DWORD TotalVirtual;
-	   DWORD AvailVirtual;
-   });
-   
-   Win32::API->Import('kernel32', 'VOID GlobalMemoryStatus(LPMEMORYSTATUS lpMemoryStatus)')
-   or die "Could not locate kernel32.dll - SystemInfo.pm cannot continue\n";
-   
-   my $MEMORYSTATUS = Win32::API::Struct->new('MEMORYSTATUS');
-   GlobalMemoryStatus($MEMORYSTATUS);
-   return undef if $MEMORYSTATUS->{dwLength} == 0;
+	$MemFormat =
+	  ( $ret_type =~ /^[BKMG]B?$/ ) ? $fmt_types{$ret_type} : $fmt_types{B};
 
-   if (keys(%$return) == 0) {
-   foreach (@params) {
-    $return->{$_} = ($_ eq "MemLoad") ? $MEMORYSTATUS->{$_} : $MEMORYSTATUS->{$_}/$MemFormat;
-    }
-   }
-   else {
-    foreach (@params){
-	 $return->{$_} = $MEMORYSTATUS->{$_}/$MemFormat unless (!defined($return->{$_}));
-        }
-   }
-   1;
+	# Determine operating system
+	return undef unless my $OS = &$check_OS;
+	my $use64Bit = &$canUse64Bit;
+
+	if ( ( $OS eq "Win2K" ) && ($use64Bit) ) {
+
+		# (See GlobalMemoryStatusEx on MSDN)
+		# I had to change some of the types to get the struct to
+		# play nicely with Win32::API. The SIZE_T's are actually
+		# DWORDS in previous versions of the Win32 API, so this
+		# change doesn't hurt anything.
+		# The names of the members in the struct are different than
+		# in the API to make my life easier, and to keep the same
+		# return values this method has always had.
+		#typedef struct _MEMORYSTATUSEX {
+		#	DWORD dwLength;
+		#	DWORD dwMemoryLoad;
+		#	DWORDLONG ullTotalPhys;
+		#	DWORDLONG ullAvailPhys;
+		#	DWORDLONG ullTotalPageFile;
+		#	DWORDLONG ullAvailPageFile;
+		#	DWORDLONG ullTotalVirtual;
+		#	DWORDLONG ullAvailVirtual;
+		#	DWORDLONG ullAvailExtendedVirtual;
+		#}
+		Win32::API::Struct->typedef(
+			MEMORYSTATUSEX => qw{
+			  DWORD dwLength;
+			  DWORD MemLoad;
+			  ULONGLONG TotalPhys;
+			  ULONGLONG AvailPhys;
+			  ULONGLONG TotalPage;
+			  ULONGLONG AvailPage;
+			  ULONGLONG TotalVirtual;
+			  ULONGLONG AvailVirtual;
+			  ULONGLONG AvailExtendedVirtual;
+			  }
+		);
+
+		Win32::API->Import( 'kernel32',
+			'BOOL GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpMemoryStatusEx)' )
+		  or die
+		  "Could not locate kernel32.dll - SystemInfo.pm cannot continue\n";
+
+		my $MEMORYSTATUSEX = Win32::API::Struct->new('MEMORYSTATUSEX');
+		$MEMORYSTATUSEX->{dwLength} =
+		  Win32::API::Struct->sizeof($MEMORYSTATUSEX);
+		GlobalMemoryStatusEx($MEMORYSTATUSEX);
+
+		if ( keys(%$return) == 0 ) {
+			foreach (@params) {
+				$return->{$_} =
+				  ( $_ eq "MemLoad" )
+				  ? $MEMORYSTATUSEX->{$_}
+				  : $MEMORYSTATUSEX->{$_} / $MemFormat;
+			}
+		}
+		else {
+			foreach (@params) {
+				$return->{$_} = $MEMORYSTATUSEX->{$_} / $MemFormat
+				  unless ( !defined( $return->{$_} ) );
+			}
+		}
+	}
+	else {
+
+		# (See GlobalMemoryStatus on MSDN)
+		# I had to change some of the types to get the struct to
+		# play nicely with Win32::API. The SIZE_T's are actually
+		# DWORDS in previous versions of the Win32 API, so this
+		# change doesn't hurt anything.
+		# The names of the members in the struct are different than
+		# in the API to make my life easier, and to keep the same
+		# return values this method has always had.
+		Win32::API::Struct->typedef(
+			MEMORYSTATUS => qw{
+			  DWORD dwLength;
+			  DWORD MemLoad;
+			  DWORD TotalPhys;
+			  DWORD AvailPhys;
+			  DWORD TotalPage;
+			  DWORD AvailPage;
+			  DWORD TotalVirtual;
+			  DWORD AvailVirtual;
+			  }
+		);
+
+		Win32::API->Import( 'kernel32',
+			'VOID GlobalMemoryStatus(LPMEMORYSTATUS lpMemoryStatus)' )
+		  or die
+		  "Could not locate kernel32.dll - SystemInfo.pm cannot continue\n";
+
+		my $MEMORYSTATUS = Win32::API::Struct->new('MEMORYSTATUS');
+		GlobalMemoryStatus($MEMORYSTATUS);
+		return undef if $MEMORYSTATUS->{dwLength} == 0;
+
+		if ( keys(%$return) == 0 ) {
+			foreach (@params) {
+				$return->{$_} =
+				  ( $_ eq "MemLoad" )
+				  ? $MEMORYSTATUS->{$_}
+				  : $MEMORYSTATUS->{$_} / $MemFormat;
+			}
+		}
+		else {
+			foreach (@params) {
+				$return->{$_} = $MEMORYSTATUS->{$_} / $MemFormat
+				  unless ( !defined( $return->{$_} ) );
+			}
+		}
+	}
+	1;
 }
 
-#===========================
-my $check_OS = sub () # Attempt to make this as private as possible
-{
- my $dwPlatformId;
- my $osType;
-
- # (See GetVersionEx on MSDN)
- Win32::API::Struct->typedef( OSVERSIONINFO => qw{
-	 DWORD dwOSVersionInfoSize;
-	 DWORD dwMajorVersion;
-	 DWORD dwMinorVersion;
-	 DWORD dwBuildNumber;
-	 DWORD dwPlatformID;
-	 TCHAR szCSDVersion[128];
-	 });
-
- Win32::API->Import('kernel32', 'BOOL GetVersionEx(LPOSVERSIONINFO lpOSVersionInfo)')
- or die "Could not locate kernel32.dll - SystemInfo.pm cannot continue\n";
-
- my $OSVERSIONINFO = Win32::API::Struct->new('OSVERSIONINFO');
- $OSVERSIONINFO->{dwOSVersionInfoSize} = 148;#Win32::API::Struct->sizeof($OSVERSIONINFO);
- 
- GetVersionEx($OSVERSIONINFO) or return undef;
- $dwPlatformId = $OSVERSIONINFO->{dwPlatformID};
- if ($dwPlatformId == 2) {  $osType ="WinNT"; }
- elsif ($dwPlatformId == 1) {  $osType = "Win9x"; }
-
- return ($osType ne "") ? $osType : undef;
-};
 #==========================
 
 #==========================
-my $procNameLookup = sub(%$) #another private sub
+my $procNameLookup = sub(%$)    #another private sub
 {
-    my $infoHash = shift;
-    my $cpuVendor = shift;
+	my $infoHash  = shift;
+	my $cpuVendor = shift;
 
-    my $family = $infoHash->{family};
-    my $model = $infoHash->{model};
+	my $family = $infoHash->{family};
+	my $model  = $infoHash->{model};
 
-    # build a table based on vendor, otherwise a table to include
-    # all entries would be a pain
-    if ($cpuVendor =~ /intel/i)
-    {
-	my %cpuNameTable;
+	# build a table based on vendor, otherwise a table to include
+	# all entries would be a pain
+	if ( $cpuVendor =~ /intel/i ) {
+		my %cpuNameTable;
 
-	$cpuNameTable{4}->{0} = "Intel 486DX";
-	$cpuNameTable{4}->{1} = "Intel 486DX";
-	$cpuNameTable{4}->{2} = "Intel 486SX";
-	$cpuNameTable{4}->{3} = "Intel 487, DX2, or DX2 Overdrive";
-	$cpuNameTable{4}->{4} = "Intel 486 SL";
-	$cpuNameTable{4}->{5} = "Intel SX2";
-	$cpuNameTable{4}->{7} = "Intel Write-Back Enhanced DX2";
-	$cpuNameTable{4}->{8} = "Intel DX4 or DX4 Overdrive";
-	$cpuNameTable{5}->{1} = "Intel Pentium or Pentium Overdrive";
-	$cpuNameTable{5}->{2} = "Intel Pentium or Pentium Overdrive";
-	$cpuNameTable{5}->{3} = "Intel Pentium Overdrive for 486 systems";
-	$cpuNameTable{5}->{4} = "Intel Pentium or Pentium Overdrive with MMX";
-	$cpuNameTable{6}->{1} = "Intel Pentium Pro";
-	$cpuNameTable{6}->{3} = "Intel Pentium II";
-	$cpuNameTable{6}->{5} = "Intel Pentium II, Pentium II Xeon, or Celeron";
-	$cpuNameTable{6}->{6} = "Intel Celeron";
-	$cpuNameTable{6}->{7} = "Intel Pentium III or Pentium III Xeon";
-	$cpuNameTable{6}->{8} = "Intel Pentium III, Pentium III Xeon, or Celeron";
-	$cpuNameTable{6}->{10} = "Intel Pentium III Xeon";
-	$cpuNameTable{6}->{3} = "Intel Pentium II Overdrive";
-	$cpuNameTable{16}->{0} = "Intel Pentium 4 or Xeon";
-	$cpuNameTable{16}->{1} = "Intel Pentium 4, Xeon, Xeon MP, or Celeron";
-	$cpuNameTable{16}->{2} = "Intel Pentium 4, Mobile Pentium 4, Xeon, Mobile Xeon, Celeron, or Mobile Celeron";
+		$cpuNameTable{4}->{0} = "Intel 486DX";
+		$cpuNameTable{4}->{1} = "Intel 486DX";
+		$cpuNameTable{4}->{2} = "Intel 486SX";
+		$cpuNameTable{4}->{3} = "Intel 487, DX2, or DX2 Overdrive";
+		$cpuNameTable{4}->{4} = "Intel 486 SL";
+		$cpuNameTable{4}->{5} = "Intel SX2";
+		$cpuNameTable{4}->{7} = "Intel Write-Back Enhanced DX2";
+		$cpuNameTable{4}->{8} = "Intel DX4 or DX4 Overdrive";
+		$cpuNameTable{5}->{1} = "Intel Pentium or Pentium Overdrive";
+		$cpuNameTable{5}->{2} = "Intel Pentium or Pentium Overdrive";
+		$cpuNameTable{5}->{3} = "Intel Pentium Overdrive for 486 systems";
+		$cpuNameTable{5}->{4} = "Intel Pentium or Pentium Overdrive with MMX";
+		$cpuNameTable{6}->{1} = "Intel Pentium Pro";
+		$cpuNameTable{6}->{3} = "Intel Pentium II";
+		$cpuNameTable{6}->{5} = "Intel Pentium II, Pentium II Xeon, or Celeron";
+		$cpuNameTable{6}->{6} = "Intel Celeron";
+		$cpuNameTable{6}->{7} = "Intel Pentium III or Pentium III Xeon";
+		$cpuNameTable{6}->{8} =
+		  "Intel Pentium III, Pentium III Xeon, or Celeron";
+		$cpuNameTable{6}->{10} = "Intel Pentium III Xeon";
+		$cpuNameTable{6}->{3}  = "Intel Pentium II Overdrive";
+		$cpuNameTable{16}->{0} = "Intel Pentium 4 or Xeon";
+		$cpuNameTable{16}->{1} = "Intel Pentium 4, Xeon, Xeon MP, or Celeron";
+		$cpuNameTable{16}->{2} =
+"Intel Pentium 4, Mobile Pentium 4, Xeon, Mobile Xeon, Celeron, or Mobile Celeron";
 
-	return (exists($cpuNameTable{$family}->{$model})) ?
-		  $cpuNameTable{$family}->{$model} : "Unknown";
-    }
-    elsif ($cpuVendor =~ /AMD/i)
-    {
-	my %cpuNameTable;
+		return ( exists( $cpuNameTable{$family}->{$model} ) )
+		  ? $cpuNameTable{$family}->{$model}
+		  : "Unknown";
+	}
+	elsif ( $cpuVendor =~ /AMD/i ) {
+		my %cpuNameTable;
 
-	$cpuNameTable{5}->{0} = "AMD-K5 Model 0";
-	$cpuNameTable{5}->{1} = "AMD-K5 Model 1";
-	$cpuNameTable{5}->{2} = "AMD-K5 Model 2";
-	$cpuNameTable{5}->{3} = "AMD-K5 Model 3";
-	$cpuNameTable{5}->{6} = "AMD-K6 Model 6";
-	$cpuNameTable{5}->{7} = "AMD-K6 Model 7";
-	$cpuNameTable{5}->{8} = "AMD-K6-2 Model 8";
-	$cpuNameTable{5}->{9} = "AMD-K6 III Model 9";
-	$cpuNameTable{6}->{1} = "AMD Athlon Model 1";
-	$cpuNameTable{6}->{2} = "AMD Athlon Model 2";
-	$cpuNameTable{6}->{3} = "AMD Duron Model 3";
-	$cpuNameTable{6}->{4} = "AMD Athlon Model 4";
-	$cpuNameTable{6}->{6} = "AMD Athlon MP, Athlon XP, Mobile Athlon 4, Duron, or Mobile Duron Model 6";
-	$cpuNameTable{6}->{7} = "AMD Duron or Mobile Duron Model 7";
-	$cpuNameTable{6}->{8} = "AMD Athlon XP or Athlon MP Model 8";
-	$cpuNameTable{6}->{10} = "AMD Mobile Athlon XP-M, Mobile Athlon XP-M (LV) Model 8, or Athlon XP, Athlon MP, Mobile Athlon XP-M Model 10";
+		$cpuNameTable{5}->{0} = "AMD-K5 Model 0";
+		$cpuNameTable{5}->{1} = "AMD-K5 Model 1";
+		$cpuNameTable{5}->{2} = "AMD-K5 Model 2";
+		$cpuNameTable{5}->{3} = "AMD-K5 Model 3";
+		$cpuNameTable{5}->{6} = "AMD-K6 Model 6";
+		$cpuNameTable{5}->{7} = "AMD-K6 Model 7";
+		$cpuNameTable{5}->{8} = "AMD-K6-2 Model 8";
+		$cpuNameTable{5}->{9} = "AMD-K6 III Model 9";
+		$cpuNameTable{6}->{1} = "AMD Athlon Model 1";
+		$cpuNameTable{6}->{2} = "AMD Athlon Model 2";
+		$cpuNameTable{6}->{3} = "AMD Duron Model 3";
+		$cpuNameTable{6}->{4} = "AMD Athlon Model 4";
+		$cpuNameTable{6}->{6} =
+"AMD Athlon MP, Athlon XP, Mobile Athlon 4, Duron, or Mobile Duron Model 6";
+		$cpuNameTable{6}->{7}  = "AMD Duron or Mobile Duron Model 7";
+		$cpuNameTable{6}->{8}  = "AMD Athlon XP or Athlon MP Model 8";
+		$cpuNameTable{6}->{10} =
+"AMD Mobile Athlon XP-M, Mobile Athlon XP-M (LV) Model 8, or Athlon XP, Athlon MP, Mobile Athlon XP-M Model 10";
 
-	# the model numbering on these is a bit odd, but we're
-	# in the ballpark with this answer
-	if ($family == 4)
-	{
-	    return "Am486 or Am5x86";
+		# the model numbering on these is a bit odd, but we're
+		# in the ballpark with this answer
+		if ( $family == 4 ) {
+			return "Am486 or Am5x86";
+		}
+
+		return ( exists( $cpuNameTable{$family}->{$model} ) )
+		  ? $cpuNameTable{$family}->{$model}
+		  : "Unknown";
 	}
 
-	return (exists($cpuNameTable{$family}->{$model})) ?
-	          $cpuNameTable{$family}->{$model} : "Unknown";
-    }
-
-    return "Unknown";
+	return "Unknown";
 };
-#==========================
 
 #==========================
-sub ProcessorInfo (;\%)
-{
- my $allHash = shift;
 
- # Determine operating system
- return undef unless my $OS = &$check_OS;
+#==========================
+sub ProcessorInfo (;\%) {
+	my $allHash = shift;
 
- # (See GetSystemInfo on MSDN)
- # Win32::API does not seem to recognize LPVOID or DWORD_PTR types,
- # so they've been changed to DWORDs in the struct. These values are
- # not checked by this module, so this seems like a safe way around the
- # problem.
- Win32::API::Struct->typedef( SYSTEM_INFO => qw{
-	 WORD wProcessorArchitecture;
-	 WORD wReserved;
-	 DWORD dwPageSize;
-	 DWORD lpMinimumApplicationAddress;
-	 DWORD lpMaximumApplicationAddress;
-	 DWORD dwActiveProcessorMask;
-	 DWORD dwNumberOfProcessors;
-	 DWORD dwProcessorType;
-	 DWORD dwAllocationGranularity;
-	 WORD wProcessorLevel;
-	 WORD wProcessorRevision;
- });
+	# Determine operating system
+	return undef unless my $OS = &$check_OS;
 
- Win32::API->Import('kernel32', 'VOID GetSystemInfo(LPSYSTEM_INFO lpSystemInfo)')
- or die "Could not locate kernel32.dll - SystemInfo.pm cannot continue\n";
- my $SYSTEM_INFO = Win32::API::Struct->new('SYSTEM_INFO');
- GetSystemInfo($SYSTEM_INFO);
+	# (See GetSystemInfo on MSDN)
+	# Win32::API does not seem to recognize LPVOID or DWORD_PTR types,
+	# so they've been changed to DWORDs in the struct. These values are
+	# not checked by this module, so this seems like a safe way around the
+	# problem.
+	Win32::API::Struct->typedef(
+		SYSTEM_INFO => qw{
+		  WORD wProcessorArchitecture;
+		  WORD wReserved;
+		  DWORD dwPageSize;
+		  DWORD lpMinimumApplicationAddress;
+		  DWORD lpMaximumApplicationAddress;
+		  DWORD dwActiveProcessorMask;
+		  DWORD dwNumberOfProcessors;
+		  DWORD dwProcessorType;
+		  DWORD dwAllocationGranularity;
+		  WORD wProcessorLevel;
+		  WORD wProcessorRevision;
+		  }
+	);
 
- my $proc_type; # Holds 386,586,PPC, etc
- my $num_proc;  # number of processors
+	Win32::API->Import( 'kernel32',
+		'VOID GetSystemInfo(LPSYSTEM_INFO lpSystemInfo)' )
+	  or die "Could not locate kernel32.dll - SystemInfo.pm cannot continue\n";
+	my $SYSTEM_INFO = Win32::API::Struct->new('SYSTEM_INFO');
+	GetSystemInfo($SYSTEM_INFO);
 
- $num_proc = $SYSTEM_INFO->{dwNumberOfProcessors};
- if ($OS eq "Win9x")
- {
-  $proc_type = $SYSTEM_INFO->{dwProcessorType};
- }
- elsif ($OS eq "WinNT")
- {
-  my $proc_level; # first digit of Intel chip (5,6,etc)
-  my $proc_val;
-  $proc_val = $SYSTEM_INFO->{wProcessorArchitecture};
-  $proc_level = $SYSTEM_INFO->{wProcessorLevel};
-  # Not sure we need to make this check - who
-  # uses this value?
-  if ($proc_val == PROCESSOR_ARCHITECTURE_INTEL) {
-   $proc_type = $proc_level . "86"; }
-  elsif ($proc_val == PROCESSOR_ARCHITECTURE_MIPS) {
-   $proc_type = "MIPS"; }
-  elsif ($proc_val == PROCESSOR_ARCHITECTURE_PPC) {
-   $proc_type = "PPC"; }
-  elsif ($proc_val == PROCESSOR_ARCHITECTURE_ALPHA) {
-   $proc_type = "ALPHA"; }
-  else { $proc_type = "UNKNOWN"; }
- }
+	my $proc_type;    # Holds 386,586,PPC, etc
+	my $num_proc;     # number of processors
 
- # if a hash was supplied, fill it with all info
- if (defined($allHash)) {
-   $allHash->{NumProcessors} = $num_proc;
-   $Registry->Delimiter("/");
-   my $dll = $INC{'Win32/SystemInfo.pm'};
-   $dll =~ s/(.*?)SystemInfo.pm/$1/i;
-   $dll .= "cpuspd.dll";
-   Win32::API->Import($dll, "DWORD GetCPUSpeed()") or die "Could not locate required cpuspd.dll\n";
-   Win32::API->Import($dll, "DWORD GetCPUFamily()") or die "Could not locate required cpuspd.dll\n";
-   my $proc_speed = GetCPUSpeed();
-   my $fInfo = GetCPUFamily();
-   for (my $i = 0; $i < $num_proc; $i++) {
-    my $procinfo =
-	$Registry->Open("LMachine/Hardware/Description/System/CentralProcessor/$i",{Access=>KEY_READ()});
-	my %prochash;
-	$prochash{Identifier} = $procinfo->GetValue("Identifier");
-	$prochash{VendorIdentifier} = $procinfo->GetValue("VendorIdentifier");
-	$prochash{MHZ} = -1;
-	$prochash{MHZ} = $proc_speed;
-	my %pNameHash;
-	$pNameHash{stepping} = $fInfo & 0xF;
-	$pNameHash{model} = ($fInfo & 0xF0) >> 4;
-	$pNameHash{family} = ($fInfo & 0xF00) >> 8;
-	$prochash{ProcessorName} = &$procNameLookup(\%pNameHash,$prochash{VendorIdentifier});
-	$allHash->{"Processor$i"} = \%prochash;
-   }
-  }
- return $proc_type;
+	$num_proc = $SYSTEM_INFO->{dwNumberOfProcessors};
+	if ( $OS eq "Win9x" ) {
+		$proc_type = $SYSTEM_INFO->{dwProcessorType};
+	}
+	elsif ( ( $OS eq "WinNT" ) || ( $OS eq "Win2K" ) ) {
+		my $proc_level;    # first digit of Intel chip (5,6,etc)
+		my $proc_val;
+		$proc_val   = $SYSTEM_INFO->{wProcessorArchitecture};
+		$proc_level = $SYSTEM_INFO->{wProcessorLevel};
+
+		# Not sure we need to make this check - who
+		# uses this value?
+		if ( $proc_val == PROCESSOR_ARCHITECTURE_INTEL ) {
+			$proc_type = $proc_level . "86";
+		}
+		elsif ( $proc_val == PROCESSOR_ARCHITECTURE_MIPS ) {
+			$proc_type = "MIPS";
+		}
+		elsif ( $proc_val == PROCESSOR_ARCHITECTURE_PPC ) {
+			$proc_type = "PPC";
+		}
+		elsif ( $proc_val == PROCESSOR_ARCHITECTURE_ALPHA ) {
+			$proc_type = "ALPHA";
+		}
+		else { $proc_type = "UNKNOWN"; }
+	}
+
+	# if a hash was supplied, fill it with all info
+	if ( defined($allHash) ) {
+		$allHash->{NumProcessors} = $num_proc;
+		$Registry->Delimiter("/");
+		for ( my $i = 0 ; $i < $num_proc ; $i++ ) {
+			my $procinfo =
+			  $Registry->Open(
+				"LMachine/Hardware/Description/System/CentralProcessor/$i",
+				{ Access => KEY_READ() } );
+			my %prochash;
+			$prochash{Identifier}       = $procinfo->GetValue("Identifier");
+			$prochash{VendorIdentifier} =
+			  $procinfo->GetValue("VendorIdentifier");
+			$prochash{MHZ} = hex $procinfo->GetValue("~MHz");
+
+#$prochash{ProcessorName} = &$procNameLookup(\%pNameHash,$prochash{VendorIdentifier});
+			$prochash{ProcessorName} =
+			  $procinfo->GetValue("ProcessorNameString");
+			$allHash->{"Processor$i"} = \%prochash;
+		}
+	}
+	return $proc_type;
 }
 
 1;
@@ -505,9 +602,9 @@ Please report.
 
 =head1 VERSION
 
-This man page documents Win32::SystemInfo version 0.08
+This man page documents Win32::SystemInfo version 0.09
 
-May 14, 2003.
+November 23, 2006.
 
 =head1 AUTHOR
 
@@ -515,7 +612,7 @@ Chad Johnston C<<>cjohnston@megatome.comC<>>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2003 by Chad Johnston. All rights reserved.
+Copyright (C) 2006 by Chad Johnston. All rights reserved.
 
 =head1 LICENSE
 
