@@ -4,4 +4,3 @@ MANIFEST
 SystemInfo.pm
 test.pl
 SystemInfo.html
-lib/Win32/cpuspd.dll

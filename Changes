@@ -29,3 +29,7 @@ Revision history for Perl extension Win32::SystemInfo.
 0.08 - Added more definitions for recent CPUs. Added dependency on version 0.40
           of Win32::API. Reworked Win32::API calls. Changed calls in DLL to
           eliminate need to pack and unpack arguments.
+
+0.09 - Eliminated cpuspd.dll. Should eliminate some of the headaches associated with
+          using this module. It should now return CPU info for all flavors of 
+          Windows past Win9x without crashing.

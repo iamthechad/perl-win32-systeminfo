@@ -1,129 +1,167 @@
-<HTML>
-<HEAD>
-<TITLE>Win32::SystemInfo - Memory and Processor information on Win32 systems</TITLE>
-<LINK REV="made" HREF="mailto:">
-</HEAD>
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Win32::SystemInfo - Memory and Processor information on Win32 systems</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:" />
+</head>
 
-<BODY>
+<body style="background-color: white">
 
-<A NAME="__index__"></A>
+<p><a name="__index__"></a></p>
 <!-- INDEX BEGIN -->
 
-<UL>
+<ul>
 
-	<LI><A HREF="#name">NAME</A></LI>
-	<LI><A HREF="#synopsis">SYNOPSIS</A></LI>
-	<LI><A HREF="#abstract">ABSTRACT</A></LI>
-	<LI><A HREF="#description">DESCRIPTION</A></LI>
-	<LI><A HREF="#installation">INSTALLATION</A></LI>
-	<LI><A HREF="#caveats">CAVEATS</A></LI>
-	<LI><A HREF="#changes">CHANGES</A></LI>
-	<LI><A HREF="#bugs">BUGS</A></LI>
-	<LI><A HREF="#version">VERSION</A></LI>
-	<LI><A HREF="#author">AUTHOR</A></LI>
-	<LI><A HREF="#copyright">COPYRIGHT</A></LI>
-	<LI><A HREF="#license">LICENSE</A></LI>
-	<LI><A HREF="#see also">SEE ALSO</A></LI>
-</UL>
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#abstract">ABSTRACT</a></li>
+	<li><a href="#description">DESCRIPTION</a></li>
+	<li><a href="#installation">INSTALLATION</a></li>
+	<li><a href="#caveats">CAVEATS</a></li>
+	<li><a href="#changes">CHANGES</a></li>
+	<li><a href="#bugs">BUGS</a></li>
+	<li><a href="#version">VERSION</a></li>
+	<li><a href="#author">AUTHOR</a></li>
+	<li><a href="#copyright">COPYRIGHT</a></li>
+	<li><a href="#license">LICENSE</a></li>
+	<li><a href="#see_also">SEE ALSO</a></li>
+</ul>
 <!-- INDEX END -->
 
-<HR>
-<P>
-<H1><A NAME="name">NAME</A></H1>
-<P>Win32::SystemInfo - Memory and Processor information on Win32 systems</P>
-<P>
-<HR>
-<H1><A NAME="synopsis">SYNOPSIS</A></H1>
-<PRE>
-    use Win32::SystemInfo;</PRE>
-<P># Get Memory Information</P>
-<PRE>
-    my %mHash;
-        if (Win32::SystemInfo::MemoryStatus(%mHash))
-        {
-         ...process results...
-        }</PRE>
-<PRE>
-        To get specific values:
-    my %mHash = (TotalPhys =&gt; 0, AvailPhys =&gt; 0);
-        if (Win32::SystemInfo::MemoryStatus(%mHash))
-        {
-         ...mHash contains only TotalPhys and AvailPhys values...
-        }</PRE>
-<PRE>
-    Change the default return value:
-        Win32::SystemInfo::MemoryStatus(%mHash,&quot;MB&quot;);</PRE>
-<P># Get Processor Information</P>
-<PRE>
-    my $proc = Win32::SystemInfo::ProcessorInfo();
-        if ($proc &gt;= 586) { ... }</PRE>
-<PRE>
-        my %phash;
-        Win32::SystemInfo::ProcessorInfo(%phash);
-        for (my $i = 0; $i &lt; $phash{NumProcessors}; $i++) {
-         print &quot;Speed of processor $i: &quot; . $phash{&quot;Processor$i&quot;}{MHZ} . &quot;MHz\n&quot;;
-        }</PRE>
-<P>
-<HR>
-<H1><A NAME="abstract">ABSTRACT</A></H1>
-<P>With this module you can get total/free memory on Win32 systems,
+<hr />
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p>Win32::SystemInfo - Memory and Processor information on Win32 systems</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<pre>
+    <span class="keyword">use</span> <span class="variable">Win32::SystemInfo</span><span class="operator">;</span>
+</pre>
+<p># Get Memory Information</p>
+<pre>
+    <span class="keyword">my</span> <span class="variable">%mHash</span><span class="operator">;</span>
+    <span class="keyword">if</span> <span class="operator">(</span><span class="variable">Win32::SystemInfo::MemoryStatus</span><span class="operator">(</span><span class="variable">%mHash</span><span class="operator">))</span>
+    <span class="operator">{</span>
+     <span class="operator">...</span><span class="variable">process</span> <span class="variable">results</span><span class="operator">...</span>
+    <span class="operator">}</span>
+</pre>
+<pre>
+    <span class="variable">To</span> <span class="variable">get</span> <span class="variable">specific</span> <span class="keyword">values</span><span class="operator">:</span>
+    <span class="keyword">my</span> <span class="variable">%mHash</span> <span class="operator">=</span> <span class="operator">(</span><span class="string">TotalPhys</span> <span class="operator">=&gt;</span> <span class="number">0</span><span class="operator">,</span> <span class="string">AvailPhys</span> <span class="operator">=&gt;</span> <span class="number">0</span><span class="operator">);</span>
+    <span class="keyword">if</span> <span class="operator">(</span><span class="variable">Win32::SystemInfo::MemoryStatus</span><span class="operator">(</span><span class="variable">%mHash</span><span class="operator">))</span>
+    <span class="operator">{</span>
+     <span class="operator">...</span><span class="variable">mHash</span> <span class="variable">contains</span> <span class="variable">only</span> <span class="variable">TotalPhys</span> <span class="keyword">and</span> <span class="variable">AvailPhys</span> <span class="keyword">values</span><span class="operator">...</span>
+    <span class="operator">}</span>
+</pre>
+<pre>
+    <span class="variable">Change</span> <span class="variable">the</span> <span class="variable">default</span> <span class="keyword">return</span> <span class="variable">value</span><span class="operator">:</span>
+    <span class="variable">Win32::SystemInfo::MemoryStatus</span><span class="operator">(</span><span class="variable">%mHash</span><span class="operator">,</span><span class="string">"MB"</span><span class="operator">);</span>
+</pre>
+<p># Get Processor Information</p>
+<pre>
+    <span class="comment"># This usage is considered deprecated</span>
+    <span class="keyword">my</span> <span class="variable">$proc</span> <span class="operator">=</span> <span class="variable">Win32::SystemInfo::ProcessorInfo</span><span class="operator">();</span>
+    <span class="keyword">if</span> <span class="operator">(</span><span class="variable">$proc</span> <span class="operator">&gt;=</span> <span class="number">586</span><span class="operator">)</span> <span class="operator">{</span> <span class="operator">...</span> <span class="operator">}</span>
+</pre>
+<pre>
+    <span class="keyword">my</span> <span class="variable">%phash</span><span class="operator">;</span>
+    <span class="variable">Win32::SystemInfo::ProcessorInfo</span><span class="operator">(</span><span class="variable">%phash</span><span class="operator">);</span>
+    <span class="keyword">for</span> <span class="operator">(</span><span class="keyword">my</span> <span class="variable">$i</span> <span class="operator">=</span> <span class="number">0</span><span class="operator">;</span> <span class="variable">$i</span> <span class="operator">&lt;</span> <span class="variable">$phash</span><span class="operator">{</span><span class="string">NumProcessors</span><span class="operator">}</span><span class="operator">;</span> <span class="variable">$i</span><span class="operator">++)</span> <span class="operator">{</span>
+     <span class="keyword">print</span> <span class="string">"Speed of processor $i: "</span> <span class="operator">.</span> <span class="variable">$phash</span><span class="operator">{</span><span class="string">"Processor$i"</span><span class="operator">}{</span><span class="string">MHZ</span><span class="operator">}</span> <span class="operator">.</span> <span class="string">"MHz\n"</span><span class="operator">;</span>
+    <span class="operator">}</span>
+</pre>
+<p>
+</p>
+<hr />
+<h1><a name="abstract">ABSTRACT</a></h1>
+<p>With this module you can get total/free memory on Win32 systems,
 including installed RAM (physical memory) and page file. This module will
 also let you access processor information, including processor family
-(386,486,etc), speed, name, vendor, and revision information.</P>
-<P>
-<HR>
-<H1><A NAME="description">DESCRIPTION</A></H1>
-<P>Module provides two functions:</P>
-<DL>
-<DT><STRONG><A NAME="item_MemoryStatus">MemoryStatus</A></STRONG><BR>
-<DD>
-<STRONG>Win32::SystemInfo::MemoryStatus</STRONG>(%mHash,[$format]);
-<PRE>
+(386,486,etc), speed, name, vendor, and revision information.</p>
+<p>
+</p>
+<hr />
+<h1><a name="description">DESCRIPTION</a></h1>
+<p>Module provides two functions:</p>
+<dl>
+<dt><strong><a name="item_memorystatus">MemoryStatus</a></strong>
+
+<dd>
+<p><strong>Win32::SystemInfo::MemoryStatus</strong>(%mHash,[$format]);</p>
+</dd>
+<dd>
+<pre>
    %mHash                      - The hash that will receive the results.
                                  Certain values can be set prior to the
                                  call to retrieve a subset. (See below)
    $format                     - Optional parameter. Used to set the order
-                                 of magnitude of the results. (See below)</PRE>
-<PRE>
+                                 of magnitude of the results. (See below)</pre>
+</dd>
+<dd>
+<pre>
    Determines the current memory status of a Win32 machine. Populates
-   %mHash with the results. Function returns undef on failure.</PRE>
-<PRE>
+   %mHash with the results. Function returns undef on failure.</pre>
+</dd>
+<dd>
+<pre>
    Values returned through the hash:
    MemLoad                     - Windows NT 3.1 to 4.0: The percentage of
                                  approximately the last 1000 pages of physical
                                  memory that is in use.
-                               - Windows 2000: The approximate percentage of
+                               - Windows 2000 and later: The approximate percentage of
                                  total physical memory that is in use.
    TotalPhys                   - Total amount of physical memory (RAM).
+                               - See CAVEATS below about the accuracy of this value.
    AvailPhys                   - Available physical memory (RAM).
    TotalPage                   - Allocated size of page (swap) file.
    AvailPage                   - Available page file memory.
    TotalVirtual                - Total physical + maximum page file.
-   AvailVirtual                 - Total amount of available memory.</PRE>
-<PRE>
-   Values returned through the hash can also be specified by setting
-   them before the function is called.
-       my %mHash = (TotalPhys =&gt; 0);
-       Win32::MemoryInfo::MemoryStatus(%mHash);</PRE>
-<PRE>
-   Will return only the total physical memory.</PRE>
-<PRE>
+   AvailVirtual                 - Total amount of available memory.</pre>
+</dd>
+<dd>
+<pre>
+   <span class="variable">Values</span> <span class="variable">returned</span> <span class="variable">through</span> <span class="variable">the</span> <span class="variable">hash</span> <span class="variable">can</span> <span class="variable">also</span> <span class="variable">be</span> <span class="variable">specified</span> <span class="variable">by</span> <span class="variable">setting</span>
+   <span class="variable">them</span> <span class="variable">before</span> <span class="variable">the</span> <span class="variable">function</span> <span class="variable">is</span> <span class="variable">called</span><span class="operator">.</span>
+       <span class="keyword">my</span> <span class="variable">%mHash</span> <span class="operator">=</span> <span class="operator">(</span><span class="string">TotalPhys</span> <span class="operator">=&gt;</span> <span class="number">0</span><span class="operator">);</span>
+       <span class="variable">Win32::MemoryInfo::MemoryStatus</span><span class="operator">(</span><span class="variable">%mHash</span><span class="operator">);</span>
+</pre>
+</dd>
+<dd>
+<pre>
+   Will return only the total physical memory.</pre>
+</dd>
+<dd>
+<pre>
    MemoryStatus return values in bytes by default. This can be changed with
    the $format parameter. Valid values for $format are:
        B        -  Bytes (default)
        KB       -  Kilobytes
        MB       -  Megabytes
-       GB       -  Gigabytes</PRE>
-<P></P>
-<DT><STRONG><A NAME="item_ProcessorInfo">ProcessorInfo</A></STRONG><BR>
-<DD>
-$proc = <STRONG>Win32::SystemInfo::ProcessorInfo</STRONG>([%pHash]);
-<PRE>
+       GB       -  Gigabytes</pre>
+</dd>
+</li>
+<dt><strong><a name="item_processorinfo">ProcessorInfo</a></strong>
+
+<dd>
+<p>$proc = <strong>Win32::SystemInfo::ProcessorInfo</strong>([%pHash]);</p>
+</dd>
+<dd>
+<pre>
    Determines the processor information of a Win32 computer. Returns a &quot;quick&quot;
    value or undef on failure. Can also populate %pHash with detailed information
-   on all processors present in the system.</PRE>
-<PRE>
-   $proc                        - Contains a numerical representation of the
+   on all processors present in the system.</pre>
+</dd>
+<dd>
+<pre>
+   $proc                        - THIS VALUE HAS BEEN MADE OBSOLETE
+                                - FOR WINDOWS NT AND LATER. RELY ON IT
+                                - AT YOUR OWN RISK.
+                                - Contains a numerical representation of the
                                 - processor level for Intel machines. For
                                 - example, a Pentium will return 586.
                                 - For non-Intel Windows NT systems, the
@@ -131,15 +169,21 @@ $proc = <STRONG>Win32::SystemInfo::ProcessorInfo</STRONG>([%pHash]);
                                 - PPC: PowerPC
                                 - MIPS: MIPS architecture
                                 - ALPHA: Alpha architecture
-                                - UNKNOWN: Unknown architecture</PRE>
-<PRE>
+                                - UNKNOWN: Unknown architecture</pre>
+</dd>
+<dd>
+<pre>
    %pHash                       - Optional parameter. Will be filled with
-                                - information about all processors.</PRE>
-<PRE>
+                                - information about all processors.</pre>
+</dd>
+<dd>
+<pre>
    Values returned through hash:
    NumProcessors                - The number of processors installed
-   ProcessorN                   - A hash containing all info for processor N</PRE>
-<PRE>
+   ProcessorN                   - A hash containing all info for processor N</pre>
+</dd>
+<dd>
+<pre>
    Each ProcessorN hash contains the values:
    Identifier                   - The identifier string for the processor
                                 - as found in the registry. The computer I'm
@@ -147,71 +191,78 @@ $proc = <STRONG>Win32::SystemInfo::ProcessorInfo</STRONG>([%pHash]);
                                 - &quot;x86 Family 6 Model 7 Stepping 3&quot;
    VendorIdentifier             - The vendor name of the processor
    MHZ                          - The speed in MHz of the processor
-                                - Returns -1 if unable to determine.
+                                - This is not a calculated value, but the value
+                                - that is recorded in the Windows registry.
+                                - This value will be -1 for pre Windows NT
+                                - systems (95/98/Me). 
    ProcessorName                - The name of the processor, such as
-                                - &quot;Intel Pentium&quot;, or &quot;AMD Athlon&quot;.</PRE>
-<PRE>
-   PLEASE read the note about the MHz value in Caveats, below.</PRE>
-<P></P></DL>
-<P>No functions are exported.</P>
-<P>
-<HR>
-<H1><A NAME="installation">INSTALLATION</A></H1>
-<P>Installation is simple. Follow these steps:</P>
-<PRE>
+                                - &quot;Intel Pentium&quot;, or &quot;AMD Athlon&quot;.</pre>
+</dd>
+<dd>
+<pre>
+   PLEASE read the note about the MHz value in Caveats, below.</pre>
+</dd>
+</li>
+</dl>
+<p>No functions are exported.</p>
+<p>
+</p>
+<hr />
+<h1><a name="installation">INSTALLATION</a></h1>
+<p>Installation is simple. Follow these steps:</p>
+<pre>
  perl makefile.pl
  nmake
  nmake test
- nmake install</PRE>
-<P>Copy the SystemInfo.html file into whatever directory you keep your
+ nmake install</pre>
+<p>Copy the SystemInfo.html file into whatever directory you keep your
 documentation in. I haven't figured out yet how to automatically copy
-it over, sorry.</P>
-<P>I've noticed that ActiveState can give an error about not being
-able to find perl when processing the makefile.pl file on Win9x.
-To get around this, open makefile.pl and add another key/value
-pair into <CODE>WriteMakefile()</CODE> that looks like this:
-'PERL'	=&gt; 'full/path/to/your/perl.exe',
-That should do the trick!</P>
-<P>This module can also be used by simply placing it and the included
-DLL in your /Win32 directory somewhere in @INC.</P>
-<P>This module requires
-&lt;br&gt;Win32::API module by Aldo Calpini</P>
-<P>
-<HR>
-<H1><A NAME="caveats">CAVEATS</A></H1>
-<P>The information returned by the MemoryStatus function is volatile.
+it over, sorry.</p>
+<p>Nmake can be downloaded from <a href="http://download.microsoft.com/download/vc15/Patch/1.52/W95/EN-US/Nmake15.exe">http://download.microsoft.com/download/vc15/Patch/1.52/W95/EN-US/Nmake15.exe</a></p>
+<p>This module can also be installed as an ActiveState module by downloading
+the package from <a href="http://www.megatome.com/Win32SystemInfo">http://www.megatome.com/Win32SystemInfo</a></p>
+<p>This module can also be used by simply placing it /Win32 directory 
+somewhere in @INC.</p>
+<p>This module requires</p>
+<p>Win32::API module by Aldo Calpini</p>
+<p>Win32::TieRegistry by Tye McQueen</p>
+<p>
+</p>
+<hr />
+<h1><a name="caveats">CAVEATS</a></h1>
+<p>The information returned by the MemoryStatus function is volatile.
 There is no guarantee that two sequential calls to this function
-will return the same information.</P>
-<P>On computers with more than 4 GB of memory, the MemoryStatus function
+will return the same information.</p>
+<p>On computers with more than 4 GB of memory, the MemoryStatus function
 can return incorrect information. Windows 2000 reports a value of -1
 to indicate an overflow. Earlier versions of Windows NT report a value
-that is the real amount of memory, modulo 4 GB.</P>
-<P>On Intel x86 computers with more than 2 GB and less than 4 GB of memory,
+that is the real amount of memory, modulo 4 GB.</p>
+<p>On Intel x86 computers with more than 2 GB and less than 4 GB of memory,
 the MemoryStatus function will always return 2 GB for TotalPhys.
 Similarly, if the total available memory is between 2 and 4 GB, AvailPhys
-will be rounded down to 2 GB.</P>
-<P>ProcessorInfo will only reliably return CPU speed for Intel chips, and AMD
-chips that support the time stamp counter. (This appears to be K6-2, K6-III,
-all Athlons, and Duron.) The return value for MHz should always be checked
-in a Win9x environment to verify that it is valid. (Invalid processors, or
-other errors will return a -1.)</P>
-<P>The ProcessorName value returned by ProcessorInfo may sometimes
-reference more than one processor. For example, the returned value
-may be ``Intel Pentium or Pentium Overdrive''. There are ways to tell
-these processors apart programmatically, but I did not take the time
-to implement the extra code in this release.</P>
-<P>The ProcessorInfo function has been only tested in these environments:
-Windows 98, Single Pentium II processor
-Windows NT 4.0, Single Pentium III processor
-Windows XP Pro, Single Athlon processor</P>
-<P>All feedback on other configurations is greatly welcomed.</P>
-<P>This module has been created and tested on Windows 98 and WinNT 4.0 on
-ActiveState port of Perl 5.6. It has <STRONG>not</STRONG> been extensively
-tested on Windows 2000 yet.</P>
-<P>
-<HR>
-<H1><A NAME="changes">CHANGES</A></H1>
-<PRE>
+will be rounded down to 2 GB.</p>
+<p>If you are using a 64 bit processor AND your version of Perl has been compiled
+to be 64 bit aware, the values returned by MemoryStatus will be correct
+regardless of the amount of installed RAM. (At least it should. I don't have a 
+64 bit chip to test it on.)</p>
+<p>ProcessorInfo will only return the CPU speed that is reported in the Windows
+registry. This module used to include a DLL that performed a CPU speed calculation,
+but all of these new-fangled processors caused the code to break. I don't have the
+time or energy to rewrite the module so that it will play well with Dual Core,
+Hyperthreading, and what else. The value from the registry appears to be accurate
+on the machines I've tested this module on. Windows 9x/Me will return values of -1
+for processor speed, as their registries don't store the MHz value. If you're using
+Win9x/Me and need the MHz value, use an older version of this module. Sorry.</p>
+<p>The ProcessorName value is also pulled straight from the registry. Correctly
+determining the processor's name requires throwing some assembly at it, and 
+if you've read the previous paragraph you'll know that DLL that threw assembly
+at the processor has been removed from this module.</p>
+<p>All feedback on other configurations is greatly welcomed.</p>
+<p>
+</p>
+<hr />
+<h1><a name="changes">CHANGES</a></h1>
+<pre>
  0.01 - Initial Release
  0.02 - Fixed CPU speed reporting for Win9x. Module now includes a DLL that
         performs the Win9x CPU speed determination.
@@ -229,36 +280,45 @@ tested on Windows 2000 yet.</P>
  0.07 - Changed contact information. Recompiled DLL to remove some extraneous calls.
  0.08 - Added more definitions for recent CPUs. Added dependency on version 0.40
           of Win32::API. Reworked Win32::API calls. Changed calls in DLL to
-          eliminate need to pack and unpack arguments.</PRE>
-<P>
-<HR>
-<H1><A NAME="bugs">BUGS</A></H1>
-<P>Please report.</P>
-<P>
-<HR>
-<H1><A NAME="version">VERSION</A></H1>
-<P>This man page documents Win32::SystemInfo version 0.08</P>
-<P>May 14, 2003.</P>
-<P>
-<HR>
-<H1><A NAME="author">AUTHOR</A></H1>
-<P>Chad Johnston <CODE>&lt;</CODE><A HREF="mailto:cjohnston@megatome.com">cjohnston@megatome.com</A><CODE></CODE>&gt;</P>
-<P>
-<HR>
-<H1><A NAME="copyright">COPYRIGHT</A></H1>
-<P>Copyright (C) 2003 by Chad Johnston. All rights reserved.</P>
-<P>
-<HR>
-<H1><A NAME="license">LICENSE</A></H1>
-<P>This package is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.</P>
-<P>
-<HR>
-<H1><A NAME="see also">SEE ALSO</A></H1>
-<P>perl(1).</P>
-<P>Win32
-Win32/Utilities</P>
+          eliminate need to pack and unpack arguments.
+ 0.09 - Eliminated cpuspd.dll. Should eliminate some of the headaches associated with
+          using this module. It should now return CPU info for all flavors of 
+          Windows past Win9x without crashing.</pre>
+<p>
+</p>
+<hr />
+<h1><a name="bugs">BUGS</a></h1>
+<p>Please report.</p>
+<p>
+</p>
+<hr />
+<h1><a name="version">VERSION</a></h1>
+<p>This man page documents Win32::SystemInfo version 0.09</p>
+<p>December 9, 2006.</p>
+<p>
+</p>
+<hr />
+<h1><a name="author">AUTHOR</a></h1>
+<p>Chad Johnston <code>&lt;</code><a href="mailto:cjohnston@megatome.com">cjohnston@megatome.com</a><code></code>&gt;</p>
+<p>
+</p>
+<hr />
+<h1><a name="copyright">COPYRIGHT</a></h1>
+<p>Copyright (C) 2006 by Chad Johnston. All rights reserved.</p>
+<p>
+</p>
+<hr />
+<h1><a name="license">LICENSE</a></h1>
+<p>This package is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.</p>
+<p>
+</p>
+<hr />
+<h1><a name="see_also">SEE ALSO</a></h1>
+<p>perl(1).</p>
+<p>Win32
+Win32/Utilities</p>
 
-</BODY>
+</body>
 
-</HTML>
+</html>
