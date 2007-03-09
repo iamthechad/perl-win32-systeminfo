@@ -8,7 +8,7 @@ use Win32::TieRegistry qw(:KEY_);
 
 use vars qw($VERSION);
 
-$VERSION = '0.09';
+$VERSION = '0.10';
 
 # Not sure how useful these are anymore -
 # may get rid of them soon.
@@ -436,7 +436,7 @@ it over, sorry.
 Nmake can be downloaded from http://download.microsoft.com/download/vc15/Patch/1.52/W95/EN-US/Nmake15.exe
 
 This module can also be installed as an ActiveState module by downloading
-the package from http://www.megatome.com/Win32SystemInfo
+the package from http://www.megatome.com/win32systeminfo
 
 This module can also be used by simply placing it /Win32 directory 
 somewhere in @INC.
@@ -507,10 +507,15 @@ All feedback on other configurations is greatly welcomed.
  0.09 - Eliminated cpuspd.dll. Should eliminate some of the headaches associated with
           using this module. It should now return CPU info for all flavors of 
           Windows past Win9x without crashing.
+ 0.10 - Added bug description for Perl Development Kit. Fixed link to ActiveState module
+          location.
 
 =head1 BUGS
 
-Please report.
+For versions 0.09 and forward, there is a compatibility bug with ActiveState's Perl Development
+Kit version 6. Apparently the PDK has been designed to expect the cpuspd.dll file to be present and
+fails against versions of this module that do not include the DLL anymore. For details on the bug
+and workaround instructions, see this URL: http://bugs.activestate.com/show_bug.cgi?id=67333
 
 =head1 VERSION
 

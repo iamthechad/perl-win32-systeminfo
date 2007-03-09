@@ -220,7 +220,7 @@ documentation in. I haven't figured out yet how to automatically copy
 it over, sorry.</p>
 <p>Nmake can be downloaded from <a href="http://download.microsoft.com/download/vc15/Patch/1.52/W95/EN-US/Nmake15.exe">http://download.microsoft.com/download/vc15/Patch/1.52/W95/EN-US/Nmake15.exe</a></p>
 <p>This module can also be installed as an ActiveState module by downloading
-the package from <a href="http://www.megatome.com/Win32SystemInfo">http://www.megatome.com/Win32SystemInfo</a></p>
+the package from <a href="http://www.megatome.com/win32systeminfo">http://www.megatome.com/win32systeminfo</a></p>
 <p>This module can also be used by simply placing it /Win32 directory 
 somewhere in @INC.</p>
 <p>This module requires</p>
@@ -283,12 +283,17 @@ at the processor has been removed from this module.</p>
           eliminate need to pack and unpack arguments.
  0.09 - Eliminated cpuspd.dll. Should eliminate some of the headaches associated with
           using this module. It should now return CPU info for all flavors of 
-          Windows past Win9x without crashing.</pre>
+          Windows past Win9x without crashing.
+ 0.10 - Added bug description for Perl Development Kit. Fixed link to ActiveState module
+          location.</pre>
 <p>
 </p>
 <hr />
 <h1><a name="bugs">BUGS</a></h1>
-<p>Please report.</p>
+<p>For versions 0.09 and forward, there is a compatibility bug with ActiveState's Perl Development
+Kit version 6. Apparently the PDK has been designed to expect the cpuspd.dll file to be present and
+fails against versions of this module that do not include the DLL anymore. For details on the bug
+and workaround instructions, see this URL: <a href="http://bugs.activestate.com/show_bug.cgi?id=67333">http://bugs.activestate.com/show_bug.cgi?id=67333</a></p>
 <p>
 </p>
 <hr />

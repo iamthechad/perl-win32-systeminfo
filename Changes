@@ -33,3 +33,6 @@ Revision history for Perl extension Win32::SystemInfo.
 0.09 - Eliminated cpuspd.dll. Should eliminate some of the headaches associated with
           using this module. It should now return CPU info for all flavors of 
           Windows past Win9x without crashing.
+      
+0.10 - Added bug description for Perl Development Kit. Fixed link to ActiveState module
+          location.
