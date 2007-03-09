@@ -519,9 +519,9 @@ and workaround instructions, see this URL: http://bugs.activestate.com/show_bug.
 
 =head1 VERSION
 
-This man page documents Win32::SystemInfo version 0.09
+This man page documents Win32::SystemInfo version 0.10
 
-December 9, 2006.
+March 9, 2007.
 
 =head1 AUTHOR
 
@@ -529,7 +529,7 @@ Chad Johnston C<<>cjohnston@megatome.comC<>>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2006 by Chad Johnston. All rights reserved.
+Copyright (C) 2007 by Chad Johnston. All rights reserved.
 
 =head1 LICENSE
 
