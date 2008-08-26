@@ -36,3 +36,7 @@ Revision history for Perl extension Win32::SystemInfo.
       
 0.10 - Added bug description for Perl Development Kit. Fixed link to ActiveState module
           location.
+          
+0.11 - Suppress warnings that come from Win32::API when running with the -w switch. Fix bug
+          (http://rt.cpan.org/Public/Bug/Display.html?id=30894) where memory could grow 
+          uncontrollably.

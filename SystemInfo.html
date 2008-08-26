@@ -9,8 +9,10 @@
 
 <body style="background-color: white">
 
-<p><a name="__index__"></a></p>
+
 <!-- INDEX BEGIN -->
+<div name="index">
+<p><a name="__index__"></a></p>
 
 <ul>
 
@@ -28,9 +30,11 @@
 	<li><a href="#license">LICENSE</a></li>
 	<li><a href="#see_also">SEE ALSO</a></li>
 </ul>
+
+<hr name="index" />
+</div>
 <!-- INDEX END -->
 
-<hr />
 <p>
 </p>
 <h1><a name="name">NAME</a></h1>
@@ -59,7 +63,7 @@
     <span class="operator">}</span>
 </pre>
 <pre>
-    <span class="variable">Change</span> <span class="variable">the</span> <span class="variable">default</span> <span class="keyword">return</span> <span class="variable">value</span><span class="operator">:</span>
+    <span class="variable">Change</span> <span class="variable">the</span> <span class="keyword">default</span> <span class="keyword">return</span> <span class="variable">value</span><span class="operator">:</span>
     <span class="variable">Win32::SystemInfo::MemoryStatus</span><span class="operator">(</span><span class="variable">%mHash</span><span class="operator">,</span><span class="string">"MB"</span><span class="operator">);</span>
 </pre>
 <p># Get Processor Information</p>
@@ -72,7 +76,7 @@
     <span class="keyword">my</span> <span class="variable">%phash</span><span class="operator">;</span>
     <span class="variable">Win32::SystemInfo::ProcessorInfo</span><span class="operator">(</span><span class="variable">%phash</span><span class="operator">);</span>
     <span class="keyword">for</span> <span class="operator">(</span><span class="keyword">my</span> <span class="variable">$i</span> <span class="operator">=</span> <span class="number">0</span><span class="operator">;</span> <span class="variable">$i</span> <span class="operator">&lt;</span> <span class="variable">$phash</span><span class="operator">{</span><span class="string">NumProcessors</span><span class="operator">}</span><span class="operator">;</span> <span class="variable">$i</span><span class="operator">++)</span> <span class="operator">{</span>
-     <span class="keyword">print</span> <span class="string">"Speed of processor $i: "</span> <span class="operator">.</span> <span class="variable">$phash</span><span class="operator">{</span><span class="string">"Processor$i"</span><span class="operator">}{</span><span class="string">MHZ</span><span class="operator">}</span> <span class="operator">.</span> <span class="string">"MHz\n"</span><span class="operator">;</span>
+     <span class="keyword">print</span> <span class="string">"Speed of processor </span><span class="variable">$i</span><span class="string">: "</span> <span class="operator">.</span> <span class="variable">$phash</span><span class="operator">{</span><span class="string">"Processor</span><span class="variable">$i</span><span class="string">"</span><span class="operator">}{</span><span class="string">MHZ</span><span class="operator">}</span> <span class="operator">.</span> <span class="string">"MHz\n"</span><span class="operator">;</span>
     <span class="operator">}</span>
 </pre>
 <p>
@@ -89,7 +93,7 @@ also let you access processor information, including processor family
 <h1><a name="description">DESCRIPTION</a></h1>
 <p>Module provides two functions:</p>
 <dl>
-<dt><strong><a name="item_memorystatus">MemoryStatus</a></strong>
+<dt><strong><a name="memorystatus" class="item">MemoryStatus</a></strong>
 
 <dd>
 <p><strong>Win32::SystemInfo::MemoryStatus</strong>(%mHash,[$format]);</p>
@@ -145,7 +149,7 @@ also let you access processor information, including processor family
        GB       -  Gigabytes</pre>
 </dd>
 </li>
-<dt><strong><a name="item_processorinfo">ProcessorInfo</a></strong>
+<dt><strong><a name="processorinfo" class="item">ProcessorInfo</a></strong>
 
 <dd>
 <p>$proc = <strong>Win32::SystemInfo::ProcessorInfo</strong>([%pHash]);</p>
@@ -211,7 +215,7 @@ also let you access processor information, including processor family
 <h1><a name="installation">INSTALLATION</a></h1>
 <p>Installation is simple. Follow these steps:</p>
 <pre>
- perl makefile.pl
+ perl Makefile.PL
  nmake
  nmake test
  nmake install</pre>
@@ -224,7 +228,7 @@ the package from <a href="http://www.megatome.com/win32systeminfo">http://www.me
 <p>This module can also be used by simply placing it /Win32 directory 
 somewhere in @INC.</p>
 <p>This module requires</p>
-<p>Win32::API module by Aldo Calpini</p>
+<p>Win32::API by Aldo Calpini</p>
 <p>Win32::TieRegistry by Tye McQueen</p>
 <p>
 </p>
@@ -285,7 +289,10 @@ at the processor has been removed from this module.</p>
           using this module. It should now return CPU info for all flavors of 
           Windows past Win9x without crashing.
  0.10 - Added bug description for Perl Development Kit. Fixed link to ActiveState module
-          location.</pre>
+          location.
+ 0.11 - Suppress warnings that come from Win32::API when running with the -w switch. Fix bug
+          (<a href="http://rt.cpan.org/Public/Bug/Display.html?id=30894">http://rt.cpan.org/Public/Bug/Display.html?id=30894</a>) where memory could grow 
+          uncontrollably.</pre>
 <p>
 </p>
 <hr />
@@ -298,8 +305,8 @@ and workaround instructions, see this URL: <a href="http://bugs.activestate.com/
 </p>
 <hr />
 <h1><a name="version">VERSION</a></h1>
-<p>This man page documents Win32::SystemInfo version 0.10</p>
-<p>March 9, 2007.</p>
+<p>This man page documents Win32::SystemInfo version 0.11</p>
+<p>August 26, 2008.</p>
 <p>
 </p>
 <hr />
@@ -309,7 +316,7 @@ and workaround instructions, see this URL: <a href="http://bugs.activestate.com/
 </p>
 <hr />
 <h1><a name="copyright">COPYRIGHT</a></h1>
-<p>Copyright (C) 2007 by Chad Johnston. All rights reserved.</p>
+<p>Copyright (C) 2008 by Chad Johnston. All rights reserved.</p>
 <p>
 </p>
 <hr />
@@ -320,7 +327,7 @@ it under the same terms as Perl itself.</p>
 </p>
 <hr />
 <h1><a name="see_also">SEE ALSO</a></h1>
-<p>perl(1).</p>
+<p><code>perl(1)</code>.</p>
 <p>Win32
 Win32/Utilities</p>
 
