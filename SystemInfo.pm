@@ -1,14 +1,14 @@
 package Win32::SystemInfo;
 
-require 5.005_62;
+require 5.8.0;
 use strict;
 use warnings;
-use Win32::API 0.55;
+use Win32::API 0.60;
 use Win32::TieRegistry qw(:KEY_);
 
 use vars qw($VERSION);
 
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 # Not sure how useful these are anymore -
 # may get rid of them soon.
@@ -16,6 +16,7 @@ use constant PROCESSOR_ARCHITECTURE_INTEL   => 0;
 use constant PROCESSOR_ARCHITECTURE_MIPS    => 1;
 use constant PROCESSOR_ARCHITECTURE_ALPHA   => 2;
 use constant PROCESSOR_ARCHITECTURE_PPC     => 3;
+use constant PROCESSOR_ARCHITECTURE_AMD64   => 9;
 use constant PROCESSOR_ARCHITECTURE_UNKNOWN => 0xFFFF;
 
 my %Procedures = ();
@@ -153,8 +154,8 @@ sub MemoryStatus (\%;$) {
 		else {
 			$MEMORYSTATUSEX = $Structs{'MEMORYSTATUSEX'};
 		}
-		$MEMORYSTATUSEX->{dwLength} =
-		  Win32::API::Struct->sizeof($MEMORYSTATUSEX);
+		$MEMORYSTATUSEX->{dwLength} = $MEMORYSTATUSEX->sizeof();
+		print "dwLength = $MEMORYSTATUSEX->{dwLength}\n";
 		GlobalMemoryStatusEx($MEMORYSTATUSEX);
 
 		if ( keys(%$return) == 0 ) {
@@ -268,7 +269,7 @@ sub ProcessorInfo (;\%) {
 			  DWORD dwPageSize;
 			  DWORD lpMinimumApplicationAddress;
 			  DWORD lpMaximumApplicationAddress;
-			  DWORD dwActiveProcessorMask;
+			  DWORD_PTR dwActiveProcessorMask;
 			  DWORD dwNumberOfProcessors;
 			  DWORD dwProcessorType;
 			  DWORD dwAllocationGranularity;
@@ -328,6 +329,9 @@ sub ProcessorInfo (;\%) {
 			# uses this value?
 			if ( $proc_val == PROCESSOR_ARCHITECTURE_INTEL ) {
 				$proc_type = $proc_level . "86";
+			}
+			elsif ( $proc_val == PROCESSOR_ARCHITECTURE_AMD64 ) {
+				$proc_type = "x64";
 			}
 			elsif ( $proc_val == PROCESSOR_ARCHITECTURE_MIPS ) {
 				$proc_type = "MIPS";
