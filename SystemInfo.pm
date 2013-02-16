@@ -363,7 +363,6 @@ sub ProcessorInfo (;\%) {
 					{ Access => KEY_READ() }
 				);
 				my %prochash;
-				print "$procinfo\n";
 				$prochash{Identifier}       = $procinfo->{Identifier};
 				$prochash{VendorIdentifier} =
 				  $procinfo->{VendorIdentifier};
