@@ -432,9 +432,7 @@ also let you access processor information, including processor family
 
 =over 4
 
-Module provides two functions:
-
-=item MemoryStatus
+=item B<MemoryStatus>
 
 B<Win32::SystemInfo::MemoryStatus>(%mHash,[$format]);
 
@@ -476,7 +474,7 @@ B<Win32::SystemInfo::MemoryStatus>(%mHash,[$format]);
        MB       -  Megabytes
        GB       -  Gigabytes
 
-=item ProcessorInfo
+=item B<ProcessorInfo>
 
 $proc = B<Win32::SystemInfo::ProcessorInfo>([%pHash]);
 
@@ -538,7 +536,7 @@ Copy the SystemInfo.html file into whatever directory you keep your
 documentation in. I haven't figured out yet how to automatically copy
 it over, sorry.
 
-Nmake can be downloaded from http://download.microsoft.com/download/vc15/Patch/1.52/W95/EN-US/Nmake15.exe
+Nmake can be downloaded from L<http://download.microsoft.com/download/vc15/Patch/1.52/W95/EN-US/Nmake15.exe>
 Alternatively, Strawberry Perl includes dmake that can be used instead.
 
 This module can also be used by simply placing it /Win32 directory 
@@ -593,36 +591,36 @@ All feedback on other configurations is greatly welcomed.
  0.03 - Fixed warning "use of uninitialized value" when calling MemoryStatus
         with no size argument.
  0.04 - Fixed "GetValue" error when calling ProcessorInfo as non-admin user
-          on WindowsNT
+        on WindowsNT
         - Fixed documentation bug: "AvailableVirtual" to "AvailVirtual"
  0.05 - Fixed bug introduced in 0.03 where $format was ignored in
-          MemoryStatus. All results were returned in bytes regardless of
-          $format parameter.
+        MemoryStatus. All results were returned in bytes regardless of
+        $format parameter.
  0.06 - Added new entry to processor information hash to display the name
-          of the processor. WindowsNT and 2K now use the DLL to determine
-          CPU speed as well.
+        of the processor. WindowsNT and 2K now use the DLL to determine
+        CPU speed as well.
  0.07 - Changed contact information. Recompiled DLL to remove some extraneous calls.
  0.08 - Added more definitions for recent CPUs. Added dependency on version 0.40
-          of Win32::API. Reworked Win32::API calls. Changed calls in DLL to
-          eliminate need to pack and unpack arguments.
+        of Win32::API. Reworked Win32::API calls. Changed calls in DLL to
+        eliminate need to pack and unpack arguments.
  0.09 - Eliminated cpuspd.dll. Should eliminate some of the headaches associated with
-          using this module. It should now return CPU info for all flavors of 
-          Windows past Win9x without crashing.
+        using this module. It should now return CPU info for all flavors of 
+        Windows past Win9x without crashing.
  0.10 - Added bug description for Perl Development Kit. Fixed link to ActiveState module
-          location.
+        location.
  0.11 - Suppress warnings that come from Win32::API when running with the -w switch. Fix bug
-          (http://rt.cpan.org/Public/Bug/Display.html?id=30894) where memory could grow 
-          uncontrollably.
+        (http://rt.cpan.org/Public/Bug/Display.html?id=30894) where memory could grow 
+        uncontrollably.
  0.12 - Fix some 64 bit related bugs. Use correct SYSTEM_INFO structure 
- 		  (https://rt.cpan.org/Ticket/Display.html?id=59365) and use correct struct size
- 		  (https://rt.cpan.org/Ticket/Display.html?id=48008).
+        (http://rt.cpan.org/Public/Bug/Display.html?id=59365) and use correct struct size
+        (http://rt.cpan.org/Public/Bug/Display.html?id=48008).
 
 =head1 BUGS
 
 For versions 0.09 and forward, there is a compatibility bug with ActiveState's Perl Development
 Kit version 6. Apparently the PDK has been designed to expect the cpuspd.dll file to be present and
 fails against versions of this module that do not include the DLL anymore. For details on the bug
-and workaround instructions, see this URL: http://bugs.activestate.com/show_bug.cgi?id=67333
+and workaround instructions, see this URL: L<http://bugs.activestate.com/show_bug.cgi?id=67333>
 
 =head1 VERSION
 
