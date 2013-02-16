@@ -24,7 +24,7 @@ if ( Win32::SystemInfo::MemoryStatus(%mHash) ) {
 	print "not ok 2\n";
 }
 
-if (Win32::SystemInfo::ProcessorInfo(%phash) > 0) {
+if ( Win32::SystemInfo::ProcessorInfo(%phash) ) {
 	print "ok 3\n";
 } else {
 	print "not ok 3\n";

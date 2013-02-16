@@ -1,14 +1,14 @@
 package Win32::SystemInfo;
 
-require 5.005_62;
+require 5.8.0;
 use strict;
 use warnings;
-use Win32::API 0.55;
+use Win32::API 0.60;
 use Win32::TieRegistry qw(:KEY_);
 
 use vars qw($VERSION);
 
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 # Not sure how useful these are anymore -
 # may get rid of them soon.
@@ -16,6 +16,7 @@ use constant PROCESSOR_ARCHITECTURE_INTEL   => 0;
 use constant PROCESSOR_ARCHITECTURE_MIPS    => 1;
 use constant PROCESSOR_ARCHITECTURE_ALPHA   => 2;
 use constant PROCESSOR_ARCHITECTURE_PPC     => 3;
+use constant PROCESSOR_ARCHITECTURE_AMD64   => 9;
 use constant PROCESSOR_ARCHITECTURE_UNKNOWN => 0xFFFF;
 
 my %Procedures = ();
@@ -69,8 +70,7 @@ my $check_OS = sub ()    # Attempt to make this as private as possible
 		$OSVERSIONINFO->{'dwPlatformID'}        = 0;
 		$OSVERSIONINFO->{'szCSDVersion'}        = "" x 128;
 		$OSVERSIONINFO->{'dwOSVersionInfoSize'} =
-		  148;    #Win32::API::Struct->sizeof($OSVERSIONINFO);
-		          #148;    #Win32::API::Struct->sizeof($OSVERSIONINFO);
+			$OSVERSIONINFO->sizeof();
 
 		GetVersionEx($OSVERSIONINFO) or return undef;
 
@@ -153,8 +153,16 @@ sub MemoryStatus (\%;$) {
 		else {
 			$MEMORYSTATUSEX = $Structs{'MEMORYSTATUSEX'};
 		}
-		$MEMORYSTATUSEX->{dwLength} =
-		  Win32::API::Struct->sizeof($MEMORYSTATUSEX);
+		$MEMORYSTATUSEX->{dwLength} = $MEMORYSTATUSEX->sizeof();
+		$MEMORYSTATUSEX->{MemLoad} = 0;
+		$MEMORYSTATUSEX->{TotalPhys} = 0;
+		$MEMORYSTATUSEX->{AvailPhys} = 0;
+		$MEMORYSTATUSEX->{TotalPage} = 0;
+		$MEMORYSTATUSEX->{AvailPage} = 0;
+		$MEMORYSTATUSEX->{TotalVirtual} = 0;
+		$MEMORYSTATUSEX->{AvailVirtual} = 0;
+		$MEMORYSTATUSEX->{AvailExtendedVirtual} = 0;
+
 		GlobalMemoryStatusEx($MEMORYSTATUSEX);
 
 		if ( keys(%$return) == 0 ) {
@@ -176,11 +184,7 @@ sub MemoryStatus (\%;$) {
 
 		if ( !defined( $Types{'MEMORYSTATUS'} ) ) {
 
-			# (See GlobalMemoryStatus on MSDN)
-			# I had to change some of the types to get the struct to
-			# play nicely with Win32::API. The SIZE_T's are actually
-			# DWORDS in previous versions of the Win32 API, so this
-			# change doesn't hurt anything.
+			# (See GlobalMemoryStatusEx on MSDN)
 			# The names of the members in the struct are different than
 			# in the API to make my life easier, and to keep the same
 			# return values this method has always had.
@@ -188,12 +192,12 @@ sub MemoryStatus (\%;$) {
 				MEMORYSTATUS => qw{
 				  DWORD dwLength;
 				  DWORD MemLoad;
-				  DWORD TotalPhys;
-				  DWORD AvailPhys;
-				  DWORD TotalPage;
-				  DWORD AvailPage;
-				  DWORD TotalVirtual;
-				  DWORD AvailVirtual;
+				  DWORDLONG TotalPhys;
+				  DWORDLONG AvailPhys;
+				  DWORDLONG TotalPage;
+				  DWORDLONG AvailPage;
+				  DWORDLONG TotalVirtual;
+				  DWORDLONG AvailVirtual;
 				  }
 			);
 			$Types{'MEMORYSTATUS'} = 1;
@@ -257,18 +261,14 @@ sub ProcessorInfo (;\%) {
 	if ( !defined( $Types{'SYSTEM_INFO'} ) ) {
 
 		# (See GetSystemInfo on MSDN)
-		# Win32::API does not seem to recognize LPVOID or DWORD_PTR types,
-		# so they've been changed to DWORDs in the struct. These values are
-		# not checked by this module, so this seems like a safe way around the
-		# problem.
 		Win32::API::Struct->typedef(
 			SYSTEM_INFO => qw{
 			  WORD wProcessorArchitecture;
 			  WORD wReserved;
 			  DWORD dwPageSize;
-			  DWORD lpMinimumApplicationAddress;
-			  DWORD lpMaximumApplicationAddress;
-			  DWORD dwActiveProcessorMask;
+			  UINT_PTR lpMinimumApplicationAddress;
+			  UINT_PTR lpMaximumApplicationAddress;
+			  DWORD_PTR dwActiveProcessorMask;
 			  DWORD dwNumberOfProcessors;
 			  DWORD dwProcessorType;
 			  DWORD dwAllocationGranularity;
@@ -324,10 +324,12 @@ sub ProcessorInfo (;\%) {
 			$proc_val   = $SYSTEM_INFO->{wProcessorArchitecture};
 			$proc_level = $SYSTEM_INFO->{wProcessorLevel};
 
-			# Not sure we need to make this check - who
-			# uses this value?
+			# $proc_type is the return value of ProcessorInfo
 			if ( $proc_val == PROCESSOR_ARCHITECTURE_INTEL ) {
 				$proc_type = $proc_level . "86";
+			}
+			elsif ( $proc_val == PROCESSOR_ARCHITECTURE_AMD64 ) {
+				$proc_type = "x64";
 			}
 			elsif ( $proc_val == PROCESSOR_ARCHITECTURE_MIPS ) {
 				$proc_type = "MIPS";
@@ -351,17 +353,17 @@ sub ProcessorInfo (;\%) {
 					{ Access => KEY_READ() }
 				);
 				my %prochash;
-				$prochash{Identifier}       = $procinfo->GetValue("Identifier");
+				$prochash{Identifier}       = $procinfo->{Identifier};
 				$prochash{VendorIdentifier} =
-				  $procinfo->GetValue("VendorIdentifier");
+				  $procinfo->{VendorIdentifier};
 				if ( $OS eq "Win9x" ) {
 					$prochash{MHZ} = -1;
 				}
 				else {
-					$prochash{MHZ} = hex $procinfo->GetValue("~MHz");
+					$prochash{MHZ} = hex $procinfo->{"~MHz"};
 				}
 				$prochash{ProcessorName} =
-				  $procinfo->GetValue("ProcessorNameString");
+				  $procinfo->{ProcessorNameString};
 				$allHash->{"Processor$i"} = \%prochash;
 			}
 		}
