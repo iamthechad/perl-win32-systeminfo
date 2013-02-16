@@ -155,7 +155,15 @@ sub MemoryStatus (\%;$) {
 			$MEMORYSTATUSEX = $Structs{'MEMORYSTATUSEX'};
 		}
 		$MEMORYSTATUSEX->{dwLength} = $MEMORYSTATUSEX->sizeof();
-		print "dwLength = $MEMORYSTATUSEX->{dwLength}\n";
+		$MEMORYSTATUSEX->{MemLoad} = 0;
+		$MEMORYSTATUSEX->{TotalPhys} = 0;
+		$MEMORYSTATUSEX->{AvailPhys} = 0;
+		$MEMORYSTATUSEX->{TotalPage} = 0;
+		$MEMORYSTATUSEX->{AvailPage} = 0;
+		$MEMORYSTATUSEX->{TotalVirtual} = 0;
+		$MEMORYSTATUSEX->{AvailVirtual} = 0;
+		$MEMORYSTATUSEX->{AvailExtendedVirtual} = 0;
+
 		GlobalMemoryStatusEx($MEMORYSTATUSEX);
 
 		if ( keys(%$return) == 0 ) {
@@ -355,17 +363,18 @@ sub ProcessorInfo (;\%) {
 					{ Access => KEY_READ() }
 				);
 				my %prochash;
-				$prochash{Identifier}       = $procinfo->GetValue("Identifier");
+				print "$procinfo\n";
+				$prochash{Identifier}       = $procinfo->{Identifier};
 				$prochash{VendorIdentifier} =
-				  $procinfo->GetValue("VendorIdentifier");
+				  $procinfo->{VendorIdentifier};
 				if ( $OS eq "Win9x" ) {
 					$prochash{MHZ} = -1;
 				}
 				else {
-					$prochash{MHZ} = hex $procinfo->GetValue("~MHz");
+					$prochash{MHZ} = hex $procinfo->{"~MHz"};
 				}
 				$prochash{ProcessorName} =
-				  $procinfo->GetValue("ProcessorNameString");
+				  $procinfo->{ProcessorNameString};
 				$allHash->{"Processor$i"} = \%prochash;
 			}
 		}
