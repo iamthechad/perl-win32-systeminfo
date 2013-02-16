@@ -70,8 +70,7 @@ my $check_OS = sub ()    # Attempt to make this as private as possible
 		$OSVERSIONINFO->{'dwPlatformID'}        = 0;
 		$OSVERSIONINFO->{'szCSDVersion'}        = "" x 128;
 		$OSVERSIONINFO->{'dwOSVersionInfoSize'} =
-		  148;    #Win32::API::Struct->sizeof($OSVERSIONINFO);
-		          #148;    #Win32::API::Struct->sizeof($OSVERSIONINFO);
+			$OSVERSIONINFO->sizeof();
 
 		GetVersionEx($OSVERSIONINFO) or return undef;
 
@@ -184,7 +183,7 @@ sub MemoryStatus (\%;$) {
 	else {
 
 		if ( !defined( $Types{'MEMORYSTATUS'} ) ) {
-
+			
 			# (See GlobalMemoryStatus on MSDN)
 			# I had to change some of the types to get the struct to
 			# play nicely with Win32::API. The SIZE_T's are actually
@@ -266,17 +265,13 @@ sub ProcessorInfo (;\%) {
 	if ( !defined( $Types{'SYSTEM_INFO'} ) ) {
 
 		# (See GetSystemInfo on MSDN)
-		# Win32::API does not seem to recognize LPVOID or DWORD_PTR types,
-		# so they've been changed to DWORDs in the struct. These values are
-		# not checked by this module, so this seems like a safe way around the
-		# problem.
 		Win32::API::Struct->typedef(
 			SYSTEM_INFO => qw{
 			  WORD wProcessorArchitecture;
 			  WORD wReserved;
 			  DWORD dwPageSize;
-			  DWORD lpMinimumApplicationAddress;
-			  DWORD lpMaximumApplicationAddress;
+			  UINT_PTR lpMinimumApplicationAddress;
+			  UINT_PTR lpMaximumApplicationAddress;
 			  DWORD_PTR dwActiveProcessorMask;
 			  DWORD dwNumberOfProcessors;
 			  DWORD dwProcessorType;
@@ -333,8 +328,7 @@ sub ProcessorInfo (;\%) {
 			$proc_val   = $SYSTEM_INFO->{wProcessorArchitecture};
 			$proc_level = $SYSTEM_INFO->{wProcessorLevel};
 
-			# Not sure we need to make this check - who
-			# uses this value?
+			# $proc_type is the return value of ProcessorInfo
 			if ( $proc_val == PROCESSOR_ARCHITECTURE_INTEL ) {
 				$proc_type = $proc_level . "86";
 			}
