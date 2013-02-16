@@ -455,7 +455,8 @@ B<Win32::SystemInfo::MemoryStatus>(%mHash,[$format]);
                                - Windows 2000 and later: The approximate percentage of
                                  total physical memory that is in use.
    TotalPhys                   - Total amount of physical memory (RAM).
-                               - See CAVEATS below about the accuracy of this value.
+                               - For Windows 2k and earlier, see CAVEATS below about 
+                               - the accuracy of this value.
    AvailPhys                   - Available physical memory (RAM).
    TotalPage                   - Allocated size of page (swap) file.
    AvailPage                   - Available page file memory.
@@ -492,6 +493,7 @@ $proc = B<Win32::SystemInfo::ProcessorInfo>([%pHash]);
                                 - example, a Pentium will return 586.
                                 - For non-Intel Windows NT systems, the
                                 - possible return values are:
+                                - x64: AMD64
                                 - PPC: PowerPC
                                 - MIPS: MIPS architecture
                                 - ALPHA: Alpha architecture
@@ -539,9 +541,6 @@ it over, sorry.
 
 Nmake can be downloaded from http://download.microsoft.com/download/vc15/Patch/1.52/W95/EN-US/Nmake15.exe
 
-This module can also be installed as an ActiveState module by downloading
-the package from http://www.megatome.com/win32systeminfo
-
 This module can also be used by simply placing it /Win32 directory 
 somewhere in @INC.
 
@@ -557,20 +556,18 @@ The information returned by the MemoryStatus function is volatile.
 There is no guarantee that two sequential calls to this function
 will return the same information.
 
-On computers with more than 4 GB of memory, the MemoryStatus function
+On 32 bit computers with more than 4 GB of memory, the MemoryStatus function
 can return incorrect information. Windows 2000 reports a value of -1
 to indicate an overflow. Earlier versions of Windows NT report a value
 that is the real amount of memory, modulo 4 GB.
 
-On Intel x86 computers with more than 2 GB and less than 4 GB of memory,
+On 32 bit Intel x86 computers with more than 2 GB and less than 4 GB of memory,
 the MemoryStatus function will always return 2 GB for TotalPhys.
 Similarly, if the total available memory is between 2 and 4 GB, AvailPhys
 will be rounded down to 2 GB.
 
-If you are using a 64 bit processor AND your version of Perl has been compiled
-to be 64 bit aware, the values returned by MemoryStatus will be correct
-regardless of the amount of installed RAM. (At least it should. I don't have a 
-64 bit chip to test it on.)
+64 bit systems using 64 bit versions of Perl will report the correct amount of 
+physical memory.
 
 ProcessorInfo will only return the CPU speed that is reported in the Windows
 registry. This module used to include a DLL that performed a CPU speed calculation,
@@ -616,6 +613,9 @@ All feedback on other configurations is greatly welcomed.
  0.11 - Suppress warnings that come from Win32::API when running with the -w switch. Fix bug
           (http://rt.cpan.org/Public/Bug/Display.html?id=30894) where memory could grow 
           uncontrollably.
+ 0.12 - Fix some 64 bit related bugs. Use correct SYSTEM_INFO structure 
+ 		  (https://rt.cpan.org/Ticket/Display.html?id=59365) and use correct struct size
+ 		  (https://rt.cpan.org/Ticket/Display.html?id=48008).
 
 =head1 BUGS
 
@@ -626,9 +626,9 @@ and workaround instructions, see this URL: http://bugs.activestate.com/show_bug.
 
 =head1 VERSION
 
-This man page documents Win32::SystemInfo version 0.11
+This man page documents Win32::SystemInfo version 0.12
 
-August 26, 2008.
+February 17, 2013.
 
 =head1 AUTHOR
 
@@ -636,7 +636,7 @@ Chad Johnston C<<>cjohnston@megatome.comC<>>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2008 by Chad Johnston. All rights reserved.
+Copyright (C) 2013 by Chad Johnston. All rights reserved.
 
 =head1 LICENSE
 
