@@ -1,14 +1,14 @@
 package Win32::SystemInfo;
 
-require 5.005_62;
+require 5.8.0;
 use strict;
 use warnings;
-use Win32::API 0.55;
+use Win32::API 0.60;
 use Win32::TieRegistry qw(:KEY_);
 
 use vars qw($VERSION);
 
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 # Not sure how useful these are anymore -
 # may get rid of them soon.
@@ -16,6 +16,7 @@ use constant PROCESSOR_ARCHITECTURE_INTEL   => 0;
 use constant PROCESSOR_ARCHITECTURE_MIPS    => 1;
 use constant PROCESSOR_ARCHITECTURE_ALPHA   => 2;
 use constant PROCESSOR_ARCHITECTURE_PPC     => 3;
+use constant PROCESSOR_ARCHITECTURE_AMD64   => 9;
 use constant PROCESSOR_ARCHITECTURE_UNKNOWN => 0xFFFF;
 
 my %Procedures = ();
@@ -153,8 +154,16 @@ sub MemoryStatus (\%;$) {
 		else {
 			$MEMORYSTATUSEX = $Structs{'MEMORYSTATUSEX'};
 		}
-		$MEMORYSTATUSEX->{dwLength} =
-		  Win32::API::Struct->sizeof($MEMORYSTATUSEX);
+		$MEMORYSTATUSEX->{dwLength} = $MEMORYSTATUSEX->sizeof();
+		$MEMORYSTATUSEX->{MemLoad} = 0;
+		$MEMORYSTATUSEX->{TotalPhys} = 0;
+		$MEMORYSTATUSEX->{AvailPhys} = 0;
+		$MEMORYSTATUSEX->{TotalPage} = 0;
+		$MEMORYSTATUSEX->{AvailPage} = 0;
+		$MEMORYSTATUSEX->{TotalVirtual} = 0;
+		$MEMORYSTATUSEX->{AvailVirtual} = 0;
+		$MEMORYSTATUSEX->{AvailExtendedVirtual} = 0;
+
 		GlobalMemoryStatusEx($MEMORYSTATUSEX);
 
 		if ( keys(%$return) == 0 ) {
@@ -268,7 +277,7 @@ sub ProcessorInfo (;\%) {
 			  DWORD dwPageSize;
 			  DWORD lpMinimumApplicationAddress;
 			  DWORD lpMaximumApplicationAddress;
-			  DWORD dwActiveProcessorMask;
+			  DWORD_PTR dwActiveProcessorMask;
 			  DWORD dwNumberOfProcessors;
 			  DWORD dwProcessorType;
 			  DWORD dwAllocationGranularity;
@@ -329,6 +338,9 @@ sub ProcessorInfo (;\%) {
 			if ( $proc_val == PROCESSOR_ARCHITECTURE_INTEL ) {
 				$proc_type = $proc_level . "86";
 			}
+			elsif ( $proc_val == PROCESSOR_ARCHITECTURE_AMD64 ) {
+				$proc_type = "x64";
+			}
 			elsif ( $proc_val == PROCESSOR_ARCHITECTURE_MIPS ) {
 				$proc_type = "MIPS";
 			}
@@ -351,17 +363,17 @@ sub ProcessorInfo (;\%) {
 					{ Access => KEY_READ() }
 				);
 				my %prochash;
-				$prochash{Identifier}       = $procinfo->GetValue("Identifier");
+				$prochash{Identifier}       = $procinfo->{Identifier};
 				$prochash{VendorIdentifier} =
-				  $procinfo->GetValue("VendorIdentifier");
+				  $procinfo->{VendorIdentifier};
 				if ( $OS eq "Win9x" ) {
 					$prochash{MHZ} = -1;
 				}
 				else {
-					$prochash{MHZ} = hex $procinfo->GetValue("~MHz");
+					$prochash{MHZ} = hex $procinfo->{"~MHz"};
 				}
 				$prochash{ProcessorName} =
-				  $procinfo->GetValue("ProcessorNameString");
+				  $procinfo->{ProcessorNameString};
 				$allHash->{"Processor$i"} = \%prochash;
 			}
 		}
@@ -402,7 +414,6 @@ Win32::SystemInfo - Memory and Processor information on Win32 systems
 
     # This usage is considered deprecated
     my $proc = Win32::SystemInfo::ProcessorInfo();
-    if ($proc >= 586) { ... }
 
     my %phash;
     Win32::SystemInfo::ProcessorInfo(%phash);
@@ -443,7 +454,8 @@ B<Win32::SystemInfo::MemoryStatus>(%mHash,[$format]);
                                - Windows 2000 and later: The approximate percentage of
                                  total physical memory that is in use.
    TotalPhys                   - Total amount of physical memory (RAM).
-                               - See CAVEATS below about the accuracy of this value.
+                               - For Windows 2k and earlier, see CAVEATS below about 
+                               - the accuracy of this value.
    AvailPhys                   - Available physical memory (RAM).
    TotalPage                   - Allocated size of page (swap) file.
    AvailPage                   - Available page file memory.
@@ -480,6 +492,7 @@ $proc = B<Win32::SystemInfo::ProcessorInfo>([%pHash]);
                                 - example, a Pentium will return 586.
                                 - For non-Intel Windows NT systems, the
                                 - possible return values are:
+                                - x64: AMD64
                                 - PPC: PowerPC
                                 - MIPS: MIPS architecture
                                 - ALPHA: Alpha architecture
@@ -526,9 +539,7 @@ documentation in. I haven't figured out yet how to automatically copy
 it over, sorry.
 
 Nmake can be downloaded from http://download.microsoft.com/download/vc15/Patch/1.52/W95/EN-US/Nmake15.exe
-
-This module can also be installed as an ActiveState module by downloading
-the package from http://www.megatome.com/win32systeminfo
+Alternatively, Strawberry Perl includes dmake that can be used instead.
 
 This module can also be used by simply placing it /Win32 directory 
 somewhere in @INC.
@@ -545,20 +556,18 @@ The information returned by the MemoryStatus function is volatile.
 There is no guarantee that two sequential calls to this function
 will return the same information.
 
-On computers with more than 4 GB of memory, the MemoryStatus function
+On 32 bit computers with more than 4 GB of memory, the MemoryStatus function
 can return incorrect information. Windows 2000 reports a value of -1
 to indicate an overflow. Earlier versions of Windows NT report a value
 that is the real amount of memory, modulo 4 GB.
 
-On Intel x86 computers with more than 2 GB and less than 4 GB of memory,
+On 32 bit Intel x86 computers with more than 2 GB and less than 4 GB of memory,
 the MemoryStatus function will always return 2 GB for TotalPhys.
 Similarly, if the total available memory is between 2 and 4 GB, AvailPhys
 will be rounded down to 2 GB.
 
-If you are using a 64 bit processor AND your version of Perl has been compiled
-to be 64 bit aware, the values returned by MemoryStatus will be correct
-regardless of the amount of installed RAM. (At least it should. I don't have a 
-64 bit chip to test it on.)
+64 bit systems using 64 bit versions of Perl will report the correct amount of 
+physical memory.
 
 ProcessorInfo will only return the CPU speed that is reported in the Windows
 registry. This module used to include a DLL that performed a CPU speed calculation,
@@ -604,6 +613,9 @@ All feedback on other configurations is greatly welcomed.
  0.11 - Suppress warnings that come from Win32::API when running with the -w switch. Fix bug
           (http://rt.cpan.org/Public/Bug/Display.html?id=30894) where memory could grow 
           uncontrollably.
+ 0.12 - Fix some 64 bit related bugs. Use correct SYSTEM_INFO structure 
+ 		  (https://rt.cpan.org/Ticket/Display.html?id=59365) and use correct struct size
+ 		  (https://rt.cpan.org/Ticket/Display.html?id=48008).
 
 =head1 BUGS
 
@@ -614,9 +626,9 @@ and workaround instructions, see this URL: http://bugs.activestate.com/show_bug.
 
 =head1 VERSION
 
-This man page documents Win32::SystemInfo version 0.11
+This man page documents Win32::SystemInfo version 0.12
 
-August 26, 2008.
+February 17, 2013.
 
 =head1 AUTHOR
 
@@ -624,7 +636,7 @@ Chad Johnston C<<>cjohnston@megatome.comC<>>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2008 by Chad Johnston. All rights reserved.
+Copyright (C) 2013 by Chad Johnston. All rights reserved.
 
 =head1 LICENSE
 
