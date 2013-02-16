@@ -183,8 +183,12 @@ sub MemoryStatus (\%;$) {
 	else {
 
 		if ( !defined( $Types{'MEMORYSTATUS'} ) ) {
-
-			# (See GlobalMemoryStatusEx on MSDN)
+			
+			# (See GlobalMemoryStatus on MSDN)
+			# I had to change some of the types to get the struct to
+			# play nicely with Win32::API. The SIZE_T's are actually
+			# DWORDS in previous versions of the Win32 API, so this
+			# change doesn't hurt anything.
 			# The names of the members in the struct are different than
 			# in the API to make my life easier, and to keep the same
 			# return values this method has always had.
@@ -192,12 +196,12 @@ sub MemoryStatus (\%;$) {
 				MEMORYSTATUS => qw{
 				  DWORD dwLength;
 				  DWORD MemLoad;
-				  DWORDLONG TotalPhys;
-				  DWORDLONG AvailPhys;
-				  DWORDLONG TotalPage;
-				  DWORDLONG AvailPage;
-				  DWORDLONG TotalVirtual;
-				  DWORDLONG AvailVirtual;
+				  DWORD TotalPhys;
+				  DWORD AvailPhys;
+				  DWORD TotalPage;
+				  DWORD AvailPage;
+				  DWORD TotalVirtual;
+				  DWORD AvailVirtual;
 				  }
 			);
 			$Types{'MEMORYSTATUS'} = 1;
