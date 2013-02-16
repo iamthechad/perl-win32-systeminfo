@@ -70,8 +70,7 @@ my $check_OS = sub ()    # Attempt to make this as private as possible
 		$OSVERSIONINFO->{'dwPlatformID'}        = 0;
 		$OSVERSIONINFO->{'szCSDVersion'}        = "" x 128;
 		$OSVERSIONINFO->{'dwOSVersionInfoSize'} =
-		  148;    #Win32::API::Struct->sizeof($OSVERSIONINFO);
-		          #148;    #Win32::API::Struct->sizeof($OSVERSIONINFO);
+			$OSVERSIONINFO->sizeof();
 
 		GetVersionEx($OSVERSIONINFO) or return undef;
 
@@ -185,11 +184,7 @@ sub MemoryStatus (\%;$) {
 
 		if ( !defined( $Types{'MEMORYSTATUS'} ) ) {
 
-			# (See GlobalMemoryStatus on MSDN)
-			# I had to change some of the types to get the struct to
-			# play nicely with Win32::API. The SIZE_T's are actually
-			# DWORDS in previous versions of the Win32 API, so this
-			# change doesn't hurt anything.
+			# (See GlobalMemoryStatusEx on MSDN)
 			# The names of the members in the struct are different than
 			# in the API to make my life easier, and to keep the same
 			# return values this method has always had.
@@ -197,12 +192,12 @@ sub MemoryStatus (\%;$) {
 				MEMORYSTATUS => qw{
 				  DWORD dwLength;
 				  DWORD MemLoad;
-				  DWORD TotalPhys;
-				  DWORD AvailPhys;
-				  DWORD TotalPage;
-				  DWORD AvailPage;
-				  DWORD TotalVirtual;
-				  DWORD AvailVirtual;
+				  DWORDLONG TotalPhys;
+				  DWORDLONG AvailPhys;
+				  DWORDLONG TotalPage;
+				  DWORDLONG AvailPage;
+				  DWORDLONG TotalVirtual;
+				  DWORDLONG AvailVirtual;
 				  }
 			);
 			$Types{'MEMORYSTATUS'} = 1;
@@ -266,17 +261,13 @@ sub ProcessorInfo (;\%) {
 	if ( !defined( $Types{'SYSTEM_INFO'} ) ) {
 
 		# (See GetSystemInfo on MSDN)
-		# Win32::API does not seem to recognize LPVOID or DWORD_PTR types,
-		# so they've been changed to DWORDs in the struct. These values are
-		# not checked by this module, so this seems like a safe way around the
-		# problem.
 		Win32::API::Struct->typedef(
 			SYSTEM_INFO => qw{
 			  WORD wProcessorArchitecture;
 			  WORD wReserved;
 			  DWORD dwPageSize;
-			  DWORD lpMinimumApplicationAddress;
-			  DWORD lpMaximumApplicationAddress;
+			  UINT_PTR lpMinimumApplicationAddress;
+			  UINT_PTR lpMaximumApplicationAddress;
 			  DWORD_PTR dwActiveProcessorMask;
 			  DWORD dwNumberOfProcessors;
 			  DWORD dwProcessorType;
@@ -333,8 +324,7 @@ sub ProcessorInfo (;\%) {
 			$proc_val   = $SYSTEM_INFO->{wProcessorArchitecture};
 			$proc_level = $SYSTEM_INFO->{wProcessorLevel};
 
-			# Not sure we need to make this check - who
-			# uses this value?
+			# $proc_type is the return value of ProcessorInfo
 			if ( $proc_val == PROCESSOR_ARCHITECTURE_INTEL ) {
 				$proc_type = $proc_level . "86";
 			}
