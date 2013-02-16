@@ -40,3 +40,7 @@ Revision history for Perl extension Win32::SystemInfo.
 0.11 - Suppress warnings that come from Win32::API when running with the -w switch. Fix bug
           (http://rt.cpan.org/Public/Bug/Display.html?id=30894) where memory could grow 
           uncontrollably.
+
+0.12 - Fix some 64 bit related bugs. Use correct SYSTEM_INFO structure 
+ 		  (https://rt.cpan.org/Ticket/Display.html?id=59365) and use correct struct size
+ 		  (https://rt.cpan.org/Ticket/Display.html?id=48008).
