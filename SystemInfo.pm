@@ -414,7 +414,6 @@ Win32::SystemInfo - Memory and Processor information on Win32 systems
 
     # This usage is considered deprecated
     my $proc = Win32::SystemInfo::ProcessorInfo();
-    if ($proc >= 586) { ... }
 
     my %phash;
     Win32::SystemInfo::ProcessorInfo(%phash);
@@ -540,6 +539,7 @@ documentation in. I haven't figured out yet how to automatically copy
 it over, sorry.
 
 Nmake can be downloaded from http://download.microsoft.com/download/vc15/Patch/1.52/W95/EN-US/Nmake15.exe
+Alternatively, Strawberry Perl includes dmake that can be used instead.
 
 This module can also be used by simply placing it /Win32 directory 
 somewhere in @INC.
