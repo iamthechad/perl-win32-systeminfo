@@ -1,3 +1,5 @@
+[![CPAN version](https://badge.fury.io/pl/Win32-SystemInfo.svg)](http://badge.fury.io/pl/Win32-SystemInfo)
+
 # NAME
 
 Win32::SystemInfo - Memory and Processor information on Win32 systems
